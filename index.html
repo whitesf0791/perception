@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="theme-color" content="#1C1B1F" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -16,171 +16,286 @@
 </head>
 <body>
 <div id="app">
-  <header>
-    <span class="app-title">Conversation Cards</span>
-    <div class="header-actions">
-      <button class="icon-btn" id="btn-favs" aria-label="Saved">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+
+  <!-- MD3 Top App Bar -->
+  <header class="top-app-bar" role="banner">
+    <span class="top-app-bar__title" id="view-title">Conversation Cards</span>
+    <div class="top-app-bar__actions">
+      <!-- Filter button — only meaningful on Cards view, JS shows/hides -->
+      <button class="icon-btn" id="btn-filter" aria-label="Filter questions">
+        <!-- Tune icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="8"  cy="6"  r="2" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/>
         </svg>
-      </button>
-      <button class="icon-btn" id="btn-filter" aria-label="Filter">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M7 8h10M11 12h2M9 16h6"/>
-        </svg>
+        <span class="filter-badge" id="filter-badge" aria-hidden="true"></span>
       </button>
     </div>
   </header>
 
-  <!-- Card view -->
-  <div class="view active" id="card-view">
-    <div class="pool-info" id="pool-info"></div>
-    <div class="card-area" id="card-area">
-      <!-- card injected by JS -->
+  <!-- ── Card view ── -->
+  <div class="view active" id="card-view" role="main" aria-label="Question cards">
+
+    <!-- Progress indicator row -->
+    <div class="pool-row">
+      <span class="pool-info" id="pool-info" aria-live="polite" aria-atomic="true"></span>
+      <div class="progress-track" role="progressbar" aria-label="Questions remaining"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
     </div>
+
+    <!-- Card area -->
+    <div class="card-area" id="card-area">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Action buttons -->
     <div class="card-actions" id="card-actions">
-      <button class="action-btn save-btn" id="btn-save">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      <button class="btn-tonal" id="btn-save" aria-label="Save question">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
         </svg>
         Save
       </button>
-      <button class="action-btn next-btn" id="btn-next">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-        </svg>
+      <button class="btn-filled" id="btn-next" aria-label="Next question">
         Next
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/>
+        </svg>
       </button>
     </div>
+
   </div>
 
-  <!-- Favorites view -->
-  <div class="view" id="favorites-view">
-    <h2>Saved Questions</h2>
-    <div class="favorites-list" id="favorites-list"></div>
-  </div>
-</div>
-
-<!-- Filter sheet -->
-<div class="sheet-overlay" id="sheet-overlay"></div>
-<div class="bottom-sheet" id="filter-sheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">Filter Questions</div>
-
-  <div class="filter-section">
-    <div class="filter-label">Depth</div>
-    <div class="chip-group" id="chips-depth">
-      <button class="chip d1 active" data-val="1">Light</button>
-      <button class="chip d2 active" data-val="2">Moderate</button>
-      <button class="chip d3 active" data-val="3">Deep</button>
+  <!-- ── Saved view ── -->
+  <div class="view" id="favorites-view" role="main" aria-label="Saved questions">
+    <div class="favorites-view__header">
+      <div class="favorites-view__title">Saved</div>
+      <div class="favorites-view__count" id="favs-count"></div>
     </div>
+    <div class="favorites-list" id="favorites-list" role="list"></div>
   </div>
 
-  <div class="filter-section">
-    <div class="filter-label">Setting</div>
-    <div class="setting-group" id="chips-setting">
-      <button class="setting-chip active" data-val="any">Any</button>
-      <button class="setting-chip" data-val="one_on_one">One-on-one</button>
-      <button class="setting-chip" data-val="group">Group-friendly</button>
-    </div>
-  </div>
+  <!-- ── MD3 Navigation Bar ── -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
 
-  <div class="filter-section">
-    <div class="filter-label">Category</div>
-    <div class="chip-group" id="chips-category">
-      <button class="chip active" data-val="childhood">Childhood</button>
-      <button class="chip active" data-val="travel">Travel</button>
-      <button class="chip active" data-val="work_ambition">Work</button>
-      <button class="chip active" data-val="values_beliefs">Values</button>
-      <button class="chip active" data-val="relationships">Relationships</button>
-      <button class="chip active" data-val="hypothetical">Hypothetical</button>
-      <button class="chip active" data-val="humor">Humor</button>
-      <button class="chip active" data-val="food_lifestyle">Food</button>
-      <button class="chip active" data-val="pop_culture">Pop Culture</button>
-      <button class="chip active" data-val="personal_growth">Growth</button>
-      <button class="chip active" data-val="dreams_future">Dreams</button>
-      <button class="chip active" data-val="random">Random</button>
-    </div>
-  </div>
+    <button class="nav-item active" id="nav-cards" aria-label="Cards" aria-current="page">
+      <div class="nav-item__indicator" aria-hidden="true">
+        <!-- Cards / home icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="5" width="20" height="14" rx="3"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+      </div>
+      <span class="nav-item__label">Cards</span>
+    </button>
 
-  <div class="filter-section">
-    <div class="filter-label" id="type-label">
-      Type
-      <svg class="collapse-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-      </svg>
-    </div>
-    <div class="chip-group hidden" id="chips-type">
-      <button class="chip active" data-val="memory">Memory</button>
-      <button class="chip active" data-val="reveal">Reveal</button>
-      <button class="chip active" data-val="opinion">Opinion</button>
-      <button class="chip active" data-val="hypothetical">Hypothetical</button>
-      <button class="chip active" data-val="would_you_rather">Would You Rather</button>
-      <button class="chip active" data-val="preference">Preference</button>
-      <button class="chip active" data-val="ranking">Ranking</button>
-    </div>
-  </div>
+    <button class="nav-item" id="nav-saved" aria-label="Saved questions">
+      <div class="nav-item__indicator" aria-hidden="true">
+        <!-- Heart icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+      </div>
+      <span class="nav-item__label">Saved</span>
+    </button>
 
-  <div class="sheet-footer">
-    <button class="btn-reset-filters" id="btn-reset-filters">Reset</button>
-    <button class="btn-apply" id="btn-apply-filters">Apply</button>
+  </nav>
+</div><!-- /#app -->
+
+<!-- ── Filter bottom sheet ── -->
+<div class="scrim" id="scrim" aria-hidden="true"></div>
+<div class="bottom-sheet" id="filter-sheet"
+     role="dialog" aria-modal="true" aria-label="Filter questions">
+
+  <div class="sheet__handle" aria-hidden="true"></div>
+
+  <div class="sheet__scroll">
+    <div class="sheet__title">Filters</div>
+
+    <!-- Depth -->
+    <div class="filter-section">
+      <div class="filter-section__label" aria-label="Depth filter">Depth</div>
+      <div class="chip-group" id="chips-depth" role="group" aria-label="Select question depth">
+        <button class="chip d1 active" data-val="1">
+          <svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Light
+        </button>
+        <button class="chip d2 active" data-val="2">
+          <svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Moderate
+        </button>
+        <button class="chip d3 active" data-val="3">
+          <svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Deep
+        </button>
+      </div>
+    </div>
+
+    <!-- Setting -->
+    <div class="filter-section">
+      <div class="filter-section__label">Setting</div>
+      <div class="segmented-group" id="chips-setting" role="group" aria-label="Select setting">
+        <button class="seg-btn active" data-val="any">
+          <svg class="seg-btn__check" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Any
+        </button>
+        <button class="seg-btn" data-val="one_on_one">
+          <svg class="seg-btn__check" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          1-on-1
+        </button>
+        <button class="seg-btn" data-val="group">
+          <svg class="seg-btn__check" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Group
+        </button>
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="filter-section">
+      <div class="filter-section__label">Category</div>
+      <div class="chip-group" id="chips-category" role="group" aria-label="Select categories">
+        <button class="chip active" data-val="childhood"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Childhood</button>
+        <button class="chip active" data-val="travel"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Travel</button>
+        <button class="chip active" data-val="work_ambition"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Work</button>
+        <button class="chip active" data-val="values_beliefs"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Values</button>
+        <button class="chip active" data-val="relationships"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Relationships</button>
+        <button class="chip active" data-val="hypothetical"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Hypothetical</button>
+        <button class="chip active" data-val="humor"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Humor</button>
+        <button class="chip active" data-val="food_lifestyle"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Food</button>
+        <button class="chip active" data-val="pop_culture"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Pop Culture</button>
+        <button class="chip active" data-val="personal_growth"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Growth</button>
+        <button class="chip active" data-val="dreams_future"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Dreams</button>
+        <button class="chip active" data-val="random"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Random</button>
+      </div>
+    </div>
+
+    <!-- Type (collapsed by default) -->
+    <div class="filter-section">
+      <div class="filter-section__label collapsed" id="type-label" role="button"
+           aria-expanded="false" aria-controls="chips-type" tabindex="0">
+        Question Type
+        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+      <div class="chip-group hidden" id="chips-type" role="group" aria-label="Select question types">
+        <button class="chip active" data-val="memory"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Memory</button>
+        <button class="chip active" data-val="reveal"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Reveal</button>
+        <button class="chip active" data-val="opinion"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Opinion</button>
+        <button class="chip active" data-val="hypothetical"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Hypothetical</button>
+        <button class="chip active" data-val="would_you_rather"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Would You Rather</button>
+        <button class="chip active" data-val="preference"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Preference</button>
+        <button class="chip active" data-val="ranking"><svg class="chip__check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Ranking</button>
+      </div>
+    </div>
+
+  </div><!-- /.sheet__scroll -->
+
+  <div class="sheet__footer">
+    <button class="btn-text" id="btn-reset-filters">Reset all</button>
+    <button class="btn-filled-sheet" id="btn-apply-filters">Apply</button>
   </div>
 </div>
 
 <script type="module">
 import { questions } from '/data/questions.js';
 
-// ── Storage keys
+/* ── Constants ──────────────────────────── */
 const STORAGE_FILTERS = 'conv_card_filters';
 const STORAGE_FAVS    = 'conv_card_favorites';
 
-const ALL_CATEGORIES = ['childhood','travel','work_ambition','values_beliefs','relationships','hypothetical','humor','food_lifestyle','pop_culture','personal_growth','dreams_future','random'];
-const ALL_TYPES      = ['memory','reveal','opinion','hypothetical','would_you_rather','preference','ranking'];
-
+const ALL_CATEGORIES = [
+  'childhood','travel','work_ambition','values_beliefs','relationships',
+  'hypothetical','humor','food_lifestyle','pop_culture','personal_growth',
+  'dreams_future','random'
+];
+const ALL_TYPES = [
+  'memory','reveal','opinion','hypothetical','would_you_rather','preference','ranking'
+];
 const DEFAULT_FILTERS = {
   categories: [...ALL_CATEGORIES],
   depths:     [1, 2, 3],
   setting:    'any',
   types:      [...ALL_TYPES],
 };
+const DEPTH_LABELS = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
 
-// ── State
-let filters    = loadFilters();
-let favorites  = loadFavs();
-let pool       = [];
-let seen       = [];
-let current    = null;
+/* ── State ───────────────────────────────── */
+let filters     = loadFilters();
+let favorites   = loadFavs();
+let pool        = [];
+let seen        = [];
+let current     = null;
 let currentView = 'cards';
 
-// ── DOM refs
-const cardArea      = document.getElementById('card-area');
-const poolInfo      = document.getElementById('pool-info');
-const cardActions   = document.getElementById('card-actions');
-const btnSave       = document.getElementById('btn-save');
-const btnNext       = document.getElementById('btn-next');
-const btnFavs       = document.getElementById('btn-favs');
-const btnFilter     = document.getElementById('btn-filter');
-const favsList      = document.getElementById('favorites-list');
-const sheetOverlay  = document.getElementById('sheet-overlay');
-const filterSheet   = document.getElementById('filter-sheet');
-const btnApply      = document.getElementById('btn-apply-filters');
-const btnReset      = document.getElementById('btn-reset-filters');
-const typeLabel     = document.getElementById('type-label');
-const chipsType     = document.getElementById('chips-type');
+/* ── DOM ─────────────────────────────────── */
+const cardArea        = document.getElementById('card-area');
+const poolInfo        = document.getElementById('pool-info');
+const progressFill    = document.getElementById('progress-fill');
+const progressTrack   = poolInfo.closest('.pool-row')?.querySelector('[role="progressbar"]');
+const cardActions     = document.getElementById('card-actions');
+const btnSave         = document.getElementById('btn-save');
+const btnNext         = document.getElementById('btn-next');
+const navCards        = document.getElementById('nav-cards');
+const navSaved        = document.getElementById('nav-saved');
+const btnFilter       = document.getElementById('btn-filter');
+const filterBadge     = document.getElementById('filter-badge');
+const favsList        = document.getElementById('favorites-list');
+const favsCount       = document.getElementById('favs-count');
+const scrim           = document.getElementById('scrim');
+const filterSheet     = document.getElementById('filter-sheet');
+const btnApply        = document.getElementById('btn-apply-filters');
+const btnReset        = document.getElementById('btn-reset-filters');
+const typeLabel       = document.getElementById('type-label');
+const chipsType       = document.getElementById('chips-type');
+const viewTitle       = document.getElementById('view-title');
 
-// ── Init
+/* ── Init ────────────────────────────────── */
 function init() {
   applyFiltersToChips();
   buildPool();
   drawCard();
-  registerEvents();
-  syncFavBtn();
+  wireEvents();
+  updateFilterBadge();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
   }
 }
 
-// ── Filter persistence
+/* ── Persistence ─────────────────────────── */
 function loadFilters() {
   try {
     const raw = localStorage.getItem(STORAGE_FILTERS);
@@ -193,15 +308,14 @@ function loadFilters() {
         types:      f.types   || [...ALL_TYPES],
       };
     }
-  } catch(e) {}
-  return { ...DEFAULT_FILTERS };
+  } catch(e) { /* ignore */ }
+  return { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
 }
 
 function saveFilters() {
   localStorage.setItem(STORAGE_FILTERS, JSON.stringify(filters));
 }
 
-// ── Favorites persistence
 function loadFavs() {
   try { return JSON.parse(localStorage.getItem(STORAGE_FAVS)) || []; }
   catch(e) { return []; }
@@ -211,21 +325,14 @@ function saveFavs() {
   localStorage.setItem(STORAGE_FAVS, JSON.stringify(favorites));
 }
 
-// ── Pool management
+/* ── Pool ────────────────────────────────── */
 function buildPool() {
   pool = questions.filter(q => {
     if (!filters.categories.includes(q.category)) return false;
-    if (!filters.depths.includes(q.depth)) return false;
-    if (!filters.types.includes(q.type)) return false;
-    if (filters.setting === 'one_on_one') {
-      // show only one_on_one questions
-      // (both + one_on_one are fine for one_on_one setting)
-      return true;
-    }
-    if (filters.setting === 'group') {
-      return q.setting === 'both';
-    }
-    return true; // 'any'
+    if (!filters.depths.includes(q.depth))         return false;
+    if (!filters.types.includes(q.type))           return false;
+    if (filters.setting === 'group')    return q.setting === 'both';
+    return true; // 'any' or 'one_on_one' — all questions visible in 1-on-1
   });
   seen = [];
 }
@@ -236,60 +343,103 @@ function pickNext() {
   return unseen[Math.floor(Math.random() * unseen.length)];
 }
 
-// ── Render card
+function updateProgress() {
+  const unseen = pool.filter(q => !seen.includes(q.id));
+  const total  = pool.length;
+  const pct    = total > 0 ? Math.round((unseen.length / total) * 100) : 0;
+
+  poolInfo.textContent = total > 0
+    ? `${unseen.length} of ${total} remaining`
+    : 'No questions match filters';
+
+  progressFill.style.width = pct + '%';
+  if (progressTrack) {
+    progressTrack.setAttribute('aria-valuenow', pct);
+  }
+}
+
+/* ── Card rendering ──────────────────────── */
 function drawCard(animate = false) {
   const q = pickNext();
   current = q;
+  updateProgress();
 
   if (!q) {
     renderEmpty();
     return;
   }
 
-  const isSaved = favorites.includes(q.id);
-  const depthLabels = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
-  const catLabel = q.category.replace(/_/g, ' ');
+  const isSaved   = favorites.includes(q.id);
+  const catLabel  = q.category.replace(/_/g, ' ');
 
   const card = document.createElement('div');
-  card.className = 'card' + (animate ? ' card-in' : '');
+  card.className = 'card' + (animate ? ' enter' : '');
+  card.setAttribute('role', 'article');
+  card.setAttribute('aria-label', 'Question card');
   card.innerHTML = `
-    <div class="depth-badge">
-      <div class="depth-dot d${q.depth}"></div>
-      <span class="depth-label d${q.depth}-label">${depthLabels[q.depth]}</span>
-      <span class="category-tag">${catLabel}</span>
-    </div>
-    <div class="question-text">${q.question}</div>
-    <div class="card-footer">
-      <span class="hint-text">tap or swipe →</span>
-      <div class="save-indicator ${isSaved ? 'saved-icon' : ''}">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="${isSaved ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-        </svg>
+    <div class="card__header">
+      <div class="depth-pill d${q.depth}" aria-label="Depth: ${DEPTH_LABELS[q.depth]}">
+        <span class="depth-pill__dot" aria-hidden="true"></span>
+        ${DEPTH_LABELS[q.depth]}
       </div>
+      <span class="card__category" aria-label="Category: ${catLabel}">${catLabel}</span>
     </div>
-    <div class="swipe-hint left">♥ Save</div>
-    <div class="swipe-hint right">Next →</div>
+    <p class="card__question">${q.question}</p>
+    <div class="card__footer">
+      <span class="card__hint" aria-hidden="true">tap or swipe →</span>
+      <span class="card__saved-icon ${isSaved ? 'is-saved' : ''}"
+            aria-label="${isSaved ? 'Saved' : 'Not saved'}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+             fill="${isSaved ? 'currentColor' : 'none'}"
+             stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+      </span>
+    </div>
+    <div class="swipe-label left" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      </svg>
+      Save
+    </div>
+    <div class="swipe-label right" aria-hidden="true">
+      Next
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" d="M13 7l5 5-5 5M6 12h12"/>
+      </svg>
+    </div>
   `;
 
   cardArea.innerHTML = '';
   cardArea.appendChild(card);
-
-  const unseen = pool.filter(q2 => !seen.includes(q2.id));
-  poolInfo.textContent = `${unseen.length} of ${pool.length} remaining`;
   cardActions.style.display = '';
 
-  setupCardInteraction(card);
   syncSaveBtn(isSaved);
+  setupCardInteraction(card);
 }
 
 function renderEmpty() {
   cardArea.innerHTML = `
-    <div class="empty-card">
-      <p>You've seen all ${pool.length} question${pool.length === 1 ? '' : 's'} in this filter.<br>Reset to go again or change your filters.</p>
-      <button class="btn-reset" id="btn-pool-reset">Start Over</button>
+    <div class="empty-state" role="status">
+      <svg class="empty-state__icon" xmlns="http://www.w3.org/2000/svg"
+           width="64" height="64" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+      <p class="empty-state__headline">All done!</p>
+      <p class="empty-state__body">You've seen all ${pool.length} question${pool.length !== 1 ? 's' : ''} in this filter.<br>Start over or adjust your filters.</p>
+      <button class="btn-filled" id="btn-pool-reset" style="max-width:180px">
+        Start over
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
+        </svg>
+      </button>
     </div>
   `;
-  poolInfo.textContent = `${pool.length} question${pool.length === 1 ? '' : 's'} in filter`;
   cardActions.style.display = 'none';
   document.getElementById('btn-pool-reset').addEventListener('click', () => {
     seen = [];
@@ -297,102 +447,105 @@ function renderEmpty() {
   });
 }
 
+/* ── Save button visual sync ─────────────── */
 function syncSaveBtn(isSaved) {
-  btnSave.style.color = isSaved ? 'var(--accent)' : '';
+  btnSave.classList.toggle('is-saved', isSaved);
+  btnSave.setAttribute('aria-label', isSaved ? 'Already saved' : 'Save question');
+  const svg = btnSave.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isSaved ? 'currentColor' : 'none');
 }
 
-function syncFavBtn() {
-  btnFavs.classList.toggle('active', currentView === 'favorites');
-}
-
-// ── Card swipe/tap interaction
+/* ── Card touch/mouse interaction ────────── */
 function setupCardInteraction(card) {
-  let startX = 0, startY = 0, dragging = false, moved = false;
-  let longPressTimer = null;
-
-  const LONG_PRESS_MS = 500;
   const SWIPE_THRESHOLD = 60;
-  const leftHint  = card.querySelector('.swipe-hint.left');
-  const rightHint = card.querySelector('.swipe-hint.right');
+  const LONG_PRESS_MS   = 480;
 
-  function onStart(x, y) {
+  const leftLabel  = card.querySelector('.swipe-label.left');
+  const rightLabel = card.querySelector('.swipe-label.right');
+
+  let startX = 0, startY = 0;
+  let dragging = false, hasMoved = false;
+  let longTimer = null;
+
+  function start(x, y) {
     startX = x; startY = y;
-    dragging = true; moved = false;
-    longPressTimer = setTimeout(() => {
-      if (!moved) doSave();
+    dragging = true; hasMoved = false;
+    longTimer = setTimeout(() => {
+      if (!hasMoved) doSave();
     }, LONG_PRESS_MS);
   }
 
-  function onMove(x, y) {
+  function move(x, y) {
     if (!dragging) return;
     const dx = x - startX;
     const dy = Math.abs(y - startY);
-    if (Math.abs(dx) > 8 || dy > 8) moved = true;
+    if (Math.abs(dx) > 6 || dy > 6) {
+      hasMoved = true;
+      clearTimeout(longTimer);
+    }
     if (Math.abs(dx) > 8) {
-      clearTimeout(longPressTimer);
-      card.style.transform = `translateX(${dx * 0.4}px) rotate(${dx * 0.03}deg)`;
+      card.style.transform = `translateX(${dx * 0.38}px) rotate(${dx * 0.025}deg)`;
+      const progress = Math.min(1, Math.abs(dx) / SWIPE_THRESHOLD);
       if (dx < 0) {
-        leftHint.style.opacity = Math.min(1, Math.abs(dx) / SWIPE_THRESHOLD);
-        rightHint.style.opacity = 0;
+        leftLabel.style.opacity  = progress;
+        rightLabel.style.opacity = 0;
       } else {
-        rightHint.style.opacity = Math.min(1, dx / SWIPE_THRESHOLD);
-        leftHint.style.opacity = 0;
+        rightLabel.style.opacity = progress;
+        leftLabel.style.opacity  = 0;
       }
     }
   }
 
-  function onEnd(x) {
+  function end(x) {
     if (!dragging) return;
     dragging = false;
-    clearTimeout(longPressTimer);
+    clearTimeout(longTimer);
     const dx = x - startX;
 
     if (Math.abs(dx) > SWIPE_THRESHOLD) {
-      if (dx < 0) {
-        animateCard(card, 'swipe-left', doSave);
-      } else {
-        animateCard(card, 'swipe-right', doNext);
-      }
-    } else if (!moved) {
+      if (dx < 0) exitCard(card, 'left',  doSave);
+      else         exitCard(card, 'right', doNext);
+    } else if (!hasMoved) {
       card.style.transform = '';
-      leftHint.style.opacity = 0;
-      rightHint.style.opacity = 0;
+      leftLabel.style.opacity = rightLabel.style.opacity = 0;
       doNext();
     } else {
       card.style.transform = '';
-      leftHint.style.opacity = 0;
-      rightHint.style.opacity = 0;
+      leftLabel.style.opacity = rightLabel.style.opacity = 0;
     }
   }
 
-  card.addEventListener('mousedown',  e => onStart(e.clientX, e.clientY));
-  card.addEventListener('mousemove',  e => { if (dragging) onMove(e.clientX, e.clientY); });
-  card.addEventListener('mouseup',    e => onEnd(e.clientX));
-  card.addEventListener('mouseleave', e => { if (dragging) onEnd(e.clientX); });
+  /* Mouse */
+  card.addEventListener('mousedown',  e => start(e.clientX, e.clientY));
+  card.addEventListener('mousemove',  e => { if (dragging) move(e.clientX, e.clientY); });
+  card.addEventListener('mouseup',    e => end(e.clientX));
+  card.addEventListener('mouseleave', e => { if (dragging) end(e.clientX); });
 
-  card.addEventListener('touchstart', e => { const t = e.touches[0]; onStart(t.clientX, t.clientY); }, { passive: true });
-  card.addEventListener('touchmove',  e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
-  card.addEventListener('touchend',   e => { const t = e.changedTouches[0]; onEnd(t.clientX); });
+  /* Touch */
+  card.addEventListener('touchstart', e => {
+    const t = e.touches[0]; start(t.clientX, t.clientY);
+  }, { passive: true });
+  card.addEventListener('touchmove',  e => {
+    const t = e.touches[0]; move(t.clientX, t.clientY);
+  }, { passive: true });
+  card.addEventListener('touchend',   e => {
+    const t = e.changedTouches[0]; end(t.clientX);
+  });
 }
 
-function animateCard(card, cls, callback) {
+function exitCard(card, direction, callback) {
   card.style.transform = '';
-  card.classList.add(cls);
-  setTimeout(() => {
-    if (callback) callback();
-  }, 280);
+  card.classList.add(direction === 'left' ? 'exit-left' : 'exit-right');
+  setTimeout(callback, 280);
 }
 
-// ── Actions
+/* ── Core actions ────────────────────────── */
 function doNext() {
   if (!current) return;
   seen.push(current.id);
   const card = cardArea.querySelector('.card');
-  if (card) {
-    animateCard(card, 'swipe-right', () => drawCard(true));
-  } else {
-    drawCard(true);
-  }
+  if (card) exitCard(card, 'right', () => drawCard(true));
+  else drawCard(true);
 }
 
 function doSave() {
@@ -401,65 +554,73 @@ function doSave() {
   if (!favorites.includes(id)) {
     favorites.push(id);
     saveFavs();
-    // flash saved indicator
-    const indicator = cardArea.querySelector('.save-indicator');
-    if (indicator) {
-      indicator.style.color = 'var(--accent)';
-      indicator.querySelector('svg').setAttribute('fill', 'currentColor');
-    }
+    // Update icon on card
+    const savedIcon = cardArea.querySelector('.card__saved-icon');
+    const savedSvg  = savedIcon?.querySelector('svg');
+    if (savedIcon) { savedIcon.classList.add('is-saved'); savedIcon.setAttribute('aria-label', 'Saved'); }
+    if (savedSvg)  savedSvg.setAttribute('fill', 'currentColor');
     syncSaveBtn(true);
   }
   seen.push(id);
   const card = cardArea.querySelector('.card');
-  if (card) {
-    animateCard(card, 'swipe-left', () => drawCard(true));
-  } else {
-    drawCard(true);
-  }
+  if (card) exitCard(card, 'left', () => drawCard(true));
+  else drawCard(true);
 }
 
-// ── Navigation
+/* ── View navigation ─────────────────────── */
 function showView(name) {
   currentView = name;
+
   document.getElementById('card-view').classList.toggle('active', name === 'cards');
   document.getElementById('favorites-view').classList.toggle('active', name === 'favorites');
-  syncFavBtn();
+
+  navCards.classList.toggle('active', name === 'cards');
+  navCards.setAttribute('aria-current', name === 'cards' ? 'page' : 'false');
+  navSaved.classList.toggle('active', name === 'favorites');
+  navSaved.setAttribute('aria-current', name === 'favorites' ? 'page' : 'false');
+
+  btnFilter.style.display = name === 'cards' ? '' : 'none';
+  viewTitle.textContent   = name === 'cards' ? 'Conversation Cards' : 'Saved';
+
   if (name === 'favorites') renderFavorites();
 }
 
-btnFavs.addEventListener('click', () => {
-  showView(currentView === 'favorites' ? 'cards' : 'favorites');
-});
-
-// ── Favorites view
+/* ── Favorites view ──────────────────────── */
 function renderFavorites() {
-  if (!favorites.length) {
+  const savedQs = favorites.map(id => questions.find(q => q.id === id)).filter(Boolean);
+  favsCount.textContent = savedQs.length
+    ? `${savedQs.length} question${savedQs.length !== 1 ? 's' : ''}`
+    : '';
+
+  if (!savedQs.length) {
     favsList.innerHTML = `
-      <div class="empty-favs">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      <div class="empty-favs" role="status">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
         </svg>
-        <p>No saved questions yet.<br>Long-press a card or swipe left to save it.</p>
+        <p class="empty-favs__headline">Nothing saved yet</p>
+        <p class="empty-favs__body">Swipe left on a card or tap Save<br>to keep questions here.</p>
       </div>`;
     return;
   }
 
-  const savedQs = favorites.map(id => questions.find(q => q.id === id)).filter(Boolean);
   favsList.innerHTML = '';
-
   savedQs.forEach(q => {
     const item = document.createElement('div');
     item.className = 'fav-item';
+    item.setAttribute('role', 'listitem');
     item.innerHTML = `
-      <div class="fav-depth-dot d${q.depth} depth-dot"></div>
-      <div class="fav-question">${q.question}</div>
-      <button class="fav-remove" data-id="${q.id}" aria-label="Remove">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      <div class="fav-item__depth d${q.depth}" aria-hidden="true"></div>
+      <p class="fav-item__text">${q.question}</p>
+      <button class="fav-item__remove" data-id="${q.id}" aria-label="Remove from saved">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>`;
-    item.querySelector('.fav-remove').addEventListener('click', (e) => {
-      e.stopPropagation();
+    item.querySelector('.fav-item__remove').addEventListener('click', e => {
       const id = Number(e.currentTarget.dataset.id);
       favorites = favorites.filter(f => f !== id);
       saveFavs();
@@ -469,100 +630,120 @@ function renderFavorites() {
   });
 }
 
-// ── Filter sheet
-btnFilter.addEventListener('click', openSheet);
-sheetOverlay.addEventListener('click', closeSheet);
-
+/* ── Filter sheet ────────────────────────── */
 function openSheet() {
   filterSheet.classList.add('open');
-  sheetOverlay.classList.add('open');
+  scrim.classList.add('open');
+  scrim.removeAttribute('aria-hidden');
+  filterSheet.querySelector('.btn-text')?.focus();
 }
 
 function closeSheet() {
   filterSheet.classList.remove('open');
-  sheetOverlay.classList.remove('open');
+  scrim.classList.add('open');
+  scrim.setAttribute('aria-hidden', 'true');
+  scrim.classList.remove('open');
 }
 
-// type section collapse
-typeLabel.addEventListener('click', () => {
-  typeLabel.classList.toggle('collapsed');
-  chipsType.classList.toggle('hidden');
-});
-
-// depth chips (multi-select)
-document.getElementById('chips-depth').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  chip.classList.toggle('active');
-});
-
-// category chips (multi-select)
-document.getElementById('chips-category').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  chip.classList.toggle('active');
-});
-
-// type chips (multi-select)
-chipsType.addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  chip.classList.toggle('active');
-});
-
-// setting chips (single-select)
-document.getElementById('chips-setting').addEventListener('click', e => {
-  const chip = e.target.closest('.setting-chip');
-  if (!chip) return;
-  document.querySelectorAll('.setting-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-});
-
-// apply filters
-btnApply.addEventListener('click', () => {
-  const activeDepths     = [...document.querySelectorAll('#chips-depth .chip.active')].map(c => Number(c.dataset.val));
-  const activeCategories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
-  const activeTypes      = [...document.querySelectorAll('#chips-type .chip.active')].map(c => c.dataset.val);
-  const activeSetting    = document.querySelector('.setting-chip.active')?.dataset.val || 'any';
-
-  filters = {
-    depths:     activeDepths.length     ? activeDepths     : [1,2,3],
-    categories: activeCategories.length ? activeCategories : [...ALL_CATEGORIES],
-    types:      activeTypes.length      ? activeTypes      : [...ALL_TYPES],
-    setting:    activeSetting,
-  };
-  saveFilters();
-  buildPool();
-  closeSheet();
-  if (currentView === 'cards') drawCard(true);
-});
-
-// reset filters
-btnReset.addEventListener('click', () => {
-  filters = { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
-  applyFiltersToChips();
-});
+function updateFilterBadge() {
+  const isDefault =
+    filters.depths.length === 3 &&
+    filters.categories.length === ALL_CATEGORIES.length &&
+    filters.types.length === ALL_TYPES.length &&
+    filters.setting === 'any';
+  filterBadge.classList.toggle('visible', !isDefault);
+}
 
 function applyFiltersToChips() {
-  document.querySelectorAll('#chips-depth .chip').forEach(c => {
-    c.classList.toggle('active', filters.depths.includes(Number(c.dataset.val)));
+  document.querySelectorAll('#chips-depth .chip').forEach(c =>
+    c.classList.toggle('active', filters.depths.includes(Number(c.dataset.val))));
+  document.querySelectorAll('#chips-category .chip').forEach(c =>
+    c.classList.toggle('active', filters.categories.includes(c.dataset.val)));
+  document.querySelectorAll('#chips-type .chip').forEach(c =>
+    c.classList.toggle('active', filters.types.includes(c.dataset.val)));
+  document.querySelectorAll('#chips-setting .seg-btn').forEach(c =>
+    c.classList.toggle('active', c.dataset.val === filters.setting));
+}
+
+/* ── Wire all events (called once) ────────── */
+function wireEvents() {
+  /* Navigation */
+  navCards.addEventListener('click', () => showView('cards'));
+  navSaved.addEventListener('click', () => showView('favorites'));
+
+  /* Filter sheet open/close */
+  btnFilter.addEventListener('click', openSheet);
+  scrim.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && filterSheet.classList.contains('open')) closeSheet();
   });
-  document.querySelectorAll('#chips-category .chip').forEach(c => {
-    c.classList.toggle('active', filters.categories.includes(c.dataset.val));
+
+  /* Card actions */
+  btnNext.addEventListener('click', doNext);
+  btnSave.addEventListener('click', doSave);
+
+  /* Multi-select filter chips */
+  document.getElementById('chips-depth').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) chip.classList.toggle('active');
   });
-  document.querySelectorAll('#chips-type .chip').forEach(c => {
-    c.classList.toggle('active', filters.types.includes(c.dataset.val));
+  document.getElementById('chips-category').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) chip.classList.toggle('active');
   });
-  document.querySelectorAll('.setting-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.val === filters.setting);
+  chipsType.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) chip.classList.toggle('active');
+  });
+
+  /* Single-select setting */
+  document.getElementById('chips-setting').addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+
+  /* Type accordion */
+  typeLabel.addEventListener('click', toggleTypeSection);
+  typeLabel.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTypeSection(); }
+  });
+
+  /* Apply */
+  btnApply.addEventListener('click', () => {
+    const depths     = [...document.querySelectorAll('#chips-depth .chip.active')].map(c => Number(c.dataset.val));
+    const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
+    const types      = [...document.querySelectorAll('#chips-type .chip.active')].map(c => c.dataset.val);
+    const setting    = document.querySelector('.seg-btn.active')?.dataset.val || 'any';
+
+    filters = {
+      depths:     depths.length     ? depths     : [1,2,3],
+      categories: categories.length ? categories : [...ALL_CATEGORIES],
+      types:      types.length      ? types      : [...ALL_TYPES],
+      setting,
+    };
+    saveFilters();
+    buildPool();
+    updateFilterBadge();
+    closeSheet();
+    if (currentView === 'cards') drawCard(true);
+  });
+
+  /* Reset */
+  btnReset.addEventListener('click', () => {
+    filters = { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
+    applyFiltersToChips();
   });
 }
 
-// ── Bottom action buttons
-btnNext.addEventListener('click', doNext);
-btnSave.addEventListener('click', doSave);
+function toggleTypeSection() {
+  const collapsed = typeLabel.classList.toggle('collapsed');
+  chipsType.classList.toggle('hidden', collapsed);
+  typeLabel.setAttribute('aria-expanded', String(!collapsed));
+}
 
-// ── Kick off
+/* ── Go ── */
 init();
 </script>
 </body>
