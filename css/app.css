@@ -670,6 +670,8 @@ html, body {
   overflow: hidden;
   cursor: default;
   transition: background var(--motion-short);
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .fav-item::before {
@@ -679,6 +681,7 @@ html, body {
   background: var(--md-on-surface);
   opacity: 0;
   transition: opacity var(--motion-short);
+  pointer-events: none;
 }
 .fav-item:hover::before { opacity: 0.05; }
 
