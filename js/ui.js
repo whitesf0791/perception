@@ -171,11 +171,25 @@ export function renderFavorites(savedQs, onRemove) {
 }
 
 /* ── Settings panel ─────────────────────────── */
-export function updateSettingsView(favsCount, version) {
-  document.getElementById('settings-saved-count').textContent =
-    favsCount === 0
-      ? 'Nothing saved yet'
-      : `${favsCount} question${favsCount !== 1 ? 's' : ''} saved`;
+export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount = 0 } = {}) {
+  const favText = favsCount === 0
+    ? 'Nothing saved yet'
+    : `${favsCount} question${favsCount !== 1 ? 's' : ''} saved`;
+
+  // Session group
+  const remaining = poolSize - seenCount;
+  document.getElementById('settings-deck-progress').textContent =
+    poolSize === 0
+      ? 'No deck loaded'
+      : `${remaining} of ${poolSize} remaining · ${seenCount} seen`;
+  document.getElementById('settings-saved-count').textContent = favText;
+
+  // Your data group
+  document.getElementById('settings-saved-count-data').textContent =
+    favsCount === 0 ? 'Tap the heart to bookmark cards' : favText;
+  document.getElementById('settings-seen-count').textContent =
+    seenCount === 0 ? 'No cards seen yet' : `${seenCount} card${seenCount !== 1 ? 's' : ''} seen this session`;
+
   document.getElementById('settings-version').textContent = `v${version}`;
 
   const isLight = document.documentElement.classList.contains('light');

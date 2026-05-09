@@ -162,6 +162,9 @@ html, body {
 .icon-btn:active::before { opacity: 0.12; }
 .icon-btn:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 
+/* Allow SVG strokes to render outside the viewBox within the button bounds */
+.icon-btn svg { overflow: visible; }
+
 .icon-btn.active {
   color: var(--md-primary);
   background: var(--md-primary-container);
@@ -1545,6 +1548,19 @@ html.light .saved-chip {
   gap: 12px;
   padding: 12px 16px;
   border-top: 1px solid var(--md-outline-variant);
+}
+.settings-group__label + .settings-item { border-top: none; }
+
+.settings-item__icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-surface-container-high);
+  border-radius: var(--shape-sm);
+  color: var(--md-primary);
+  flex-shrink: 0;
 }
 
 .settings-item--col {

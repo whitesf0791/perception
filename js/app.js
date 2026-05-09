@@ -95,7 +95,7 @@ function navigateTo(name) {
   currentView = name;
   ui.showView(name, favorites.length);
   if (name === 'favorites') ui.renderFavorites(getFavQs(), removeFav);
-  if (name === 'settings')  ui.updateSettingsView(favorites.length, APP_VERSION);
+  if (name === 'settings')  ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
 }
 
 function getFavQs() {
@@ -334,7 +334,7 @@ function wireEvents() {
         favorites = [];
         saveFavs(favorites);
         ui.updateSavedChip(0);
-        if (currentView === 'settings') ui.updateSettingsView(0, APP_VERSION);
+        if (currentView === 'settings') ui.updateSettingsView(0, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
       },
     });
   });
@@ -347,6 +347,7 @@ function wireEvents() {
       cb: () => {
         seen = [];
         if (currentView === 'cards') drawCard(true);
+        if (currentView === 'settings') ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: 0 });
       },
     });
   });
