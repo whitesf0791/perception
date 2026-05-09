@@ -507,6 +507,12 @@ html, body {
 .btn-filled:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 .btn-filled svg { width: 20px; height: 20px; flex-shrink: 0; }
 
+/* Undo — icon-only, fixed width, doesn't steal space from Save/Next */
+.btn-undo {
+  flex: 0 0 48px;
+  padding: 0;
+}
+
 /* Save button accent when already saved */
 .btn-tonal.is-saved {
   background: var(--md-tertiary-container);
