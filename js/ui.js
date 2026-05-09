@@ -26,6 +26,7 @@ export const els = {
   filterSheet:  document.getElementById('filter-sheet'),
   btnApply:     document.getElementById('btn-apply-filters'),
   btnReset:     document.getElementById('btn-reset-filters'),
+  btnSurprise:  document.getElementById('btn-surprise'),
   typeLabel:    document.getElementById('type-label'),
   chipsType:    document.getElementById('chips-type'),
   btnNewSess:   document.getElementById('btn-new-session'),
@@ -35,6 +36,7 @@ export const els = {
   resetDialog:  document.getElementById('reset-dialog'),
   dialogCancel: document.getElementById('dialog-cancel'),
   dialogConf:   document.getElementById('dialog-confirm'),
+  btnExportSaved:document.getElementById('btn-export-saved'),
   btnClearSaved:document.getElementById('btn-clear-saved'),
   btnClearHist: document.getElementById('btn-clear-history'),
   btnCheckUpd:  document.getElementById('btn-check-update'),
@@ -130,7 +132,7 @@ export function showView(name, savedCount) {
 }
 
 /* ── Favorites list ─────────────────────────── */
-export function renderFavorites(savedQs, onRemove) {
+export function renderFavorites(savedQs, notes, onRemove, onNote) {
   els.favsCount.textContent = savedQs.length
     ? `${savedQs.length} question${savedQs.length !== 1 ? 's' : ''}`
     : '';
@@ -151,12 +153,26 @@ export function renderFavorites(savedQs, onRemove) {
 
   els.favsList.innerHTML = '';
   savedQs.forEach(q => {
+    const note = notes[q.id] || '';
+    const notePreview = note
+      ? `<p class="fav-item__note">${note.length > 80 ? note.slice(0, 78) + '…' : note}</p>`
+      : '';
     const item = document.createElement('div');
     item.className = 'fav-item';
     item.setAttribute('role', 'listitem');
     item.innerHTML = `
       <div class="fav-item__depth d${q.depth}" aria-hidden="true"></div>
-      <p class="fav-item__text">${q.question}</p>
+      <div class="fav-item__body">
+        <p class="fav-item__text">${q.question}</p>
+        ${notePreview}
+      </div>
+      <button class="fav-item__note-btn${note ? ' has-note' : ''}" data-id="${q.id}" aria-label="${note ? 'Edit note' : 'Add note'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </button>
       <button class="fav-item__remove" data-id="${q.id}" aria-label="Remove from saved">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -166,16 +182,72 @@ export function renderFavorites(savedQs, onRemove) {
     item.querySelector('.fav-item__remove').addEventListener('click', e => {
       onRemove(Number(e.currentTarget.dataset.id));
     });
+    item.querySelector('.fav-item__note-btn').addEventListener('click', e => {
+      onNote(Number(e.currentTarget.dataset.id));
+    });
     els.favsList.appendChild(item);
   });
 }
 
+let _noteCb = null;
+export function openNoteDialog(id, existingText, questionText, cb) {
+  _noteCb = cb;
+  const dlg      = document.getElementById('note-dialog');
+  const scrim    = document.getElementById('note-scrim');
+  const textarea = document.getElementById('note-textarea');
+  const counter  = document.getElementById('note-char-count');
+  const title    = document.getElementById('note-dialog-title');
+  const qEl      = document.getElementById('note-dialog-question');
+  title.textContent = existingText ? 'Edit note' : 'Add a note';
+  qEl.textContent   = questionText;
+  textarea.value = existingText;
+  counter.textContent = `${existingText.length} / 500`;
+  dlg.setAttribute('aria-hidden', 'false');
+  dlg.classList.add('open');
+  scrim.setAttribute('aria-hidden', 'false');
+  scrim.classList.add('open');
+  textarea.focus();
+}
+
+export function closeNoteDialog() {
+  const dlg   = document.getElementById('note-dialog');
+  const scrim = document.getElementById('note-scrim');
+  dlg.classList.remove('open');
+  dlg.setAttribute('aria-hidden', 'true');
+  scrim.classList.remove('open');
+  scrim.setAttribute('aria-hidden', 'true');
+  _noteCb = null;
+}
+
+export function confirmNoteDialog() {
+  const text = document.getElementById('note-textarea').value;
+  if (_noteCb) _noteCb(text);
+  closeNoteDialog();
+}
+
 /* ── Settings panel ─────────────────────────── */
-export function updateSettingsView(favsCount, version) {
-  document.getElementById('settings-saved-count').textContent =
-    favsCount === 0
-      ? 'Nothing saved yet'
-      : `${favsCount} question${favsCount !== 1 ? 's' : ''} saved`;
+export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount = 0 } = {}) {
+  const favText = favsCount === 0
+    ? 'Nothing saved yet'
+    : `${favsCount} question${favsCount !== 1 ? 's' : ''} saved`;
+
+  // Session group
+  const remaining = poolSize - seenCount;
+  document.getElementById('settings-deck-progress').textContent =
+    poolSize === 0
+      ? 'No deck loaded'
+      : `${remaining} of ${poolSize} remaining · ${seenCount} seen`;
+  document.getElementById('settings-saved-count').textContent = favText;
+
+  // Your data group
+  document.getElementById('settings-saved-count-data').textContent =
+    favsCount === 0 ? 'Tap the heart to bookmark cards' : favText;
+  document.getElementById('settings-seen-count').textContent =
+    seenCount === 0 ? 'No cards seen yet' : `${seenCount} card${seenCount !== 1 ? 's' : ''} seen this session`;
+
+  const btnExport = document.getElementById('btn-export-saved');
+  if (btnExport) btnExport.disabled = favsCount === 0;
+
   document.getElementById('settings-version').textContent = `v${version}`;
 
   const isLight = document.documentElement.classList.contains('light');

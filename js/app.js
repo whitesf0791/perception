@@ -3,12 +3,14 @@ import {
   STORAGE_SETUP, APP_VERSION,
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS,
   loadFilters, saveFilters, loadFavs, saveFavs,
+  loadNotes, saveNotes,
 } from './store.js';
 import * as ui from './ui.js';
 
 /* ── State ──────────────────────────────────── */
 let filters     = loadFilters();
 let favorites   = loadFavs();
+let notes       = loadNotes();
 let pool        = [];
 let seen        = [];
 let current     = null;
@@ -94,8 +96,8 @@ function doSave() {
 function navigateTo(name) {
   currentView = name;
   ui.showView(name, favorites.length);
-  if (name === 'favorites') ui.renderFavorites(getFavQs(), removeFav);
-  if (name === 'settings')  ui.updateSettingsView(favorites.length, APP_VERSION);
+  if (name === 'favorites') ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
+  if (name === 'settings')  ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
 }
 
 function getFavQs() {
@@ -105,8 +107,21 @@ function getFavQs() {
 function removeFav(id) {
   favorites = favorites.filter(f => f !== id);
   saveFavs(favorites);
-  ui.renderFavorites(getFavQs(), removeFav);
+  ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
   ui.updateSavedChip(favorites.length);
+}
+
+function openNoteDialog(id) {
+  const q = questions.find(q => q.id === id);
+  ui.openNoteDialog(id, notes[id] || '', q?.question || '', (text) => {
+    if (text.trim()) {
+      notes[id] = text.trim();
+    } else {
+      delete notes[id];
+    }
+    saveNotes(notes);
+    ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
+  });
 }
 
 /* ── Setup flow ─────────────────────────────── */
@@ -132,6 +147,49 @@ function enterApp() {
   ui.els.setupView.classList.remove('active');
   navigateTo('cards');
   drawCard(true);
+}
+
+/* ── Export saved ───────────────────────────── */
+function exportSaved() {
+  const favQs = getFavQs();
+  if (!favQs.length) return;
+
+  const depthLabel = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
+  const categoryLabel = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const lines = favQs.map((q, i) => {
+    const note = notes[q.id] ? `\n   Note: ${notes[q.id]}` : '';
+    return `${i + 1}. ${q.question}\n   [${depthLabel[q.depth]} · ${categoryLabel(q.category)} · ${q.type}]${note}`;
+  });
+  const text = `Saved Questions — Perception\nExported ${new Date().toLocaleDateString()}\n\n${lines.join('\n\n')}`;
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `perception-saved-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Surprise me ────────────────────────────── */
+function surpriseMe() {
+  const depthOptions = [
+    [1,2,3],[1,2,3],[1,2,3],
+    [1,2],
+    [2,3],
+    [2],
+  ];
+  const depths = depthOptions[Math.floor(Math.random() * depthOptions.length)];
+  const shuffled = [...ALL_CATEGORIES].sort(() => Math.random() - 0.5);
+  const categories = shuffled.slice(0, 3 + Math.round(Math.random()));
+  filters = { categories, depths, setting: filters.setting, types: [...ALL_TYPES] };
+  saveFilters(filters);
+  buildPool();
+  ui.updateFilterBadge(filters);
+  ui.applyFiltersToChips(filters);
+  ui.closeSheet();
+  if (currentView === 'cards') drawCard(true);
 }
 
 /* ── Session reset ──────────────────────────── */
@@ -231,8 +289,16 @@ function wireEvents() {
   ui.els.dialogCancel.addEventListener('click', ui.closeDialog);
   ui.els.dialogScrim.addEventListener('click', ui.closeDialog);
 
+  document.getElementById('note-cancel').addEventListener('click', ui.closeNoteDialog);
+  document.getElementById('note-save').addEventListener('click', ui.confirmNoteDialog);
+  document.getElementById('note-scrim').addEventListener('click', ui.closeNoteDialog);
+  document.getElementById('note-textarea').addEventListener('input', e => {
+    document.getElementById('note-char-count').textContent = `${e.target.value.length} / 500`;
+  });
+
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (document.getElementById('note-dialog').classList.contains('open')) ui.closeNoteDialog();
     if (ui.els.resetDialog.classList.contains('open')) ui.closeDialog();
     if (ui.els.filterSheet.classList.contains('open')) ui.closeSheet();
   });
@@ -294,6 +360,8 @@ function wireEvents() {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ui.toggleTypeSection(); }
   });
 
+  ui.els.btnSurprise.addEventListener('click', surpriseMe);
+
   ui.els.btnApply.addEventListener('click', () => {
     const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
     const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
@@ -324,6 +392,8 @@ function wireEvents() {
     ui.setTheme(btn.dataset.theme);
   });
 
+  ui.els.btnExportSaved.addEventListener('click', exportSaved);
+
   ui.els.btnClearSaved.addEventListener('click', () => {
     if (!favorites.length) return;
     ui.openDialog({
@@ -334,7 +404,7 @@ function wireEvents() {
         favorites = [];
         saveFavs(favorites);
         ui.updateSavedChip(0);
-        if (currentView === 'settings') ui.updateSettingsView(0, APP_VERSION);
+        if (currentView === 'settings') ui.updateSettingsView(0, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
       },
     });
   });
@@ -347,6 +417,7 @@ function wireEvents() {
       cb: () => {
         seen = [];
         if (currentView === 'cards') drawCard(true);
+        if (currentView === 'settings') ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: 0 });
       },
     });
   });
