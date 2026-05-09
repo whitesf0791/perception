@@ -36,6 +36,7 @@ export const els = {
   resetDialog:  document.getElementById('reset-dialog'),
   dialogCancel: document.getElementById('dialog-cancel'),
   dialogConf:   document.getElementById('dialog-confirm'),
+  btnExportSaved:document.getElementById('btn-export-saved'),
   btnClearSaved:document.getElementById('btn-clear-saved'),
   btnClearHist: document.getElementById('btn-clear-history'),
   btnCheckUpd:  document.getElementById('btn-check-update'),
@@ -190,6 +191,9 @@ export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount
     favsCount === 0 ? 'Tap the heart to bookmark cards' : favText;
   document.getElementById('settings-seen-count').textContent =
     seenCount === 0 ? 'No cards seen yet' : `${seenCount} card${seenCount !== 1 ? 's' : ''} seen this session`;
+
+  const btnExport = document.getElementById('btn-export-saved');
+  if (btnExport) btnExport.disabled = favsCount === 0;
 
   document.getElementById('settings-version').textContent = `v${version}`;
 

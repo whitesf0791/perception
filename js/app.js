@@ -134,6 +134,28 @@ function enterApp() {
   drawCard(true);
 }
 
+/* ── Export saved ───────────────────────────── */
+function exportSaved() {
+  const favQs = getFavQs();
+  if (!favQs.length) return;
+
+  const depthLabel = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
+  const categoryLabel = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const lines = favQs.map((q, i) =>
+    `${i + 1}. ${q.question}\n   [${depthLabel[q.depth]} · ${categoryLabel(q.category)} · ${q.type}]`
+  );
+  const text = `Saved Questions — Perception\nExported ${new Date().toLocaleDateString()}\n\n${lines.join('\n\n')}`;
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `perception-saved-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* ── Surprise me ────────────────────────────── */
 function surpriseMe() {
   const depthOptions = [
@@ -345,6 +367,8 @@ function wireEvents() {
     if (!btn) return;
     ui.setTheme(btn.dataset.theme);
   });
+
+  ui.els.btnExportSaved.addEventListener('click', exportSaved);
 
   ui.els.btnClearSaved.addEventListener('click', () => {
     if (!favorites.length) return;
