@@ -1,12 +1,12 @@
-const CACHE_NAME = 'conv-cards-v2';
+const CACHE_NAME = 'conv-cards-v3';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/app.css',
-  '/data/questions.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  './index.html',
+  './css/app.css',
+  './data/questions.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
 ];
 
 self.addEventListener('install', event => {
