@@ -232,6 +232,13 @@ async function checkForUpdate() {
   ui.els.updateStatus.textContent   = 'Checking…';
   ui.els.btnDoUpd.style.display     = 'none';
 
+  // Prompt the browser to fetch a fresh SW, which will activate on next reload
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration('./sw.js')
+      .then(reg => reg?.update())
+      .catch(() => {});
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5000);
 
