@@ -15,6 +15,7 @@ export const els = {
   poolInfo:     document.getElementById('pool-info'),
   progressFill: document.getElementById('progress-fill'),
   progressTrack:document.getElementById('progress-track'),
+  btnUndo:      document.getElementById('btn-undo'),
   btnSave:      document.getElementById('btn-save'),
   btnNext:      document.getElementById('btn-next'),
   btnFilter:    document.getElementById('btn-filter'),
@@ -332,6 +333,10 @@ export function syncSaveBtn(isSaved) {
   els.btnSave.setAttribute('aria-label', isSaved ? 'Already saved' : 'Save question');
   const svg = els.btnSave.querySelector('svg');
   if (svg) svg.setAttribute('fill', isSaved ? 'currentColor' : 'none');
+}
+
+export function syncUndoBtn(visible) {
+  els.btnUndo.style.display = visible ? '' : 'none';
 }
 
 /* ── Card gestures ──────────────────────────── */

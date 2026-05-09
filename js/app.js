@@ -52,6 +52,7 @@ function drawCard(animate = false) {
   const q = pickNext();
   current = q;
   ui.updateProgress(pool, seen);
+  ui.syncUndoBtn(seen.length > 0);
 
   if (!q) {
     ui.renderEmpty(pool.length, restartPool);
@@ -67,6 +68,21 @@ function restartPool() {
 }
 
 /* ── Card actions ───────────────────────────── */
+function doUndo() {
+  if (!seen.length) return;
+  const prevId = seen.pop();
+  const prevQ  = questions.find(q => q.id === prevId);
+  if (!prevQ) return;
+  ui.updateProgress(pool, seen);
+  ui.syncUndoBtn(seen.length > 0);
+  const show = () => {
+    current = prevQ;
+    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave });
+  };
+  const card = ui.els.cardArea.querySelector('.card');
+  card ? ui.exitCard(card, 'right', show) : show();
+}
+
 function doNext() {
   if (!current) return;
   seen.push(current.id);
@@ -340,6 +356,7 @@ function wireEvents() {
   ui.els.navSaved.addEventListener('click',    () => navigateTo('favorites'));
   ui.els.navSettings.addEventListener('click', () => navigateTo('settings'));
 
+  ui.els.btnUndo.addEventListener('click', doUndo);
   ui.els.btnNext.addEventListener('click', doNext);
   ui.els.btnSave.addEventListener('click', doSave);
 
