@@ -1,10 +1,11 @@
-const CACHE_NAME = 'conv-cards-v4';
+const CACHE_NAME = 'conv-cards-v5';
 const ASSETS = [
   './',
   './index.html',
   './css/app.css',
   './data/questions.js',
   './manifest.json',
+  './version.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];

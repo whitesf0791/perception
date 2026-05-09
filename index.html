@@ -29,31 +29,7 @@
             d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
         </svg>
       </button>
-      <!-- Theme toggle — visible everywhere -->
-      <button class="icon-btn" id="btn-theme" aria-label="Toggle light or dark theme">
-        <!-- Moon: visible in dark mode -->
-        <svg class="theme-icon theme-icon--moon" xmlns="http://www.w3.org/2000/svg"
-             width="24" height="24" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-        </svg>
-        <!-- Sun: visible in light mode -->
-        <svg class="theme-icon theme-icon--sun" xmlns="http://www.w3.org/2000/svg"
-             width="24" height="24" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-      <!-- Filter — hidden during setup and on saved view -->
+      <!-- Filter — hidden during setup and on saved/settings view -->
       <button class="icon-btn" id="btn-filter" aria-label="Filter questions" style="display:none">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -217,6 +193,78 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       SETTINGS VIEW
+  ══════════════════════════════════════ -->
+  <div id="settings-view" class="view" role="main" aria-label="Settings">
+    <div class="settings-scroll">
+
+      <!-- Appearance -->
+      <div class="settings-group">
+        <p class="settings-group__label">Appearance</p>
+        <div class="settings-item">
+          <div class="settings-item__content">
+            <span class="settings-item__title">Theme</span>
+          </div>
+          <div class="segmented-group" id="settings-theme-seg" role="group" aria-label="Theme">
+            <button class="seg-btn active" data-theme="dark">
+              <svg class="seg-btn__check" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Dark
+            </button>
+            <button class="seg-btn" data-theme="light">
+              <svg class="seg-btn__check" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Light
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your data -->
+      <div class="settings-group">
+        <p class="settings-group__label">Your data</p>
+        <div class="settings-item">
+          <div class="settings-item__content">
+            <span class="settings-item__title">Saved questions</span>
+            <span class="settings-item__sub" id="settings-saved-count">Nothing saved yet</span>
+          </div>
+          <button class="btn-outlined" id="btn-clear-saved">Clear</button>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item__content">
+            <span class="settings-item__title">Session history</span>
+            <span class="settings-item__sub">Reset which cards you've already seen</span>
+          </div>
+          <button class="btn-outlined" id="btn-clear-history">Clear</button>
+        </div>
+      </div>
+
+      <!-- App -->
+      <div class="settings-group">
+        <p class="settings-group__label">App</p>
+        <div class="settings-item">
+          <div class="settings-item__content">
+            <span class="settings-item__title">Version</span>
+            <span class="settings-item__sub" id="settings-version"></span>
+          </div>
+        </div>
+        <div class="settings-item settings-item--col">
+          <button class="btn-outlined" id="btn-check-update">Check for updates</button>
+          <p class="update-status" id="update-status" aria-live="polite" aria-atomic="true"></p>
+          <button class="btn-filled settings-update-btn" id="btn-do-update" style="display:none">
+            Update now
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /.settings-scroll -->
+  </div><!-- /#settings-view -->
+
+  <!-- ══════════════════════════════════════
        MD3 NAVIGATION BAR
   ══════════════════════════════════════ -->
   <nav class="nav-bar" id="nav-bar" role="navigation" aria-label="Main navigation"
@@ -240,6 +288,17 @@
         </svg>
       </div>
       <span class="nav-item__label">Saved</span>
+    </button>
+    <button class="nav-item" id="nav-settings" aria-label="Settings" aria-current="false">
+      <div class="nav-item__indicator" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <span class="nav-item__label">Settings</span>
     </button>
   </nav>
 
@@ -352,24 +411,17 @@
 </div><!-- /#filter-sheet -->
 
 <!-- ══════════════════════════════════════
-     NEW SESSION DIALOG (MD3 Alert Dialog)
+     GENERIC ALERT DIALOG (MD3)
 ══════════════════════════════════════ -->
 <div class="dialog-scrim" id="dialog-scrim" aria-hidden="true"></div>
 <div class="dialog" id="reset-dialog"
      role="alertdialog" aria-modal="true"
      aria-labelledby="dialog-title" aria-hidden="true">
-  <div class="dialog__icon" aria-hidden="true">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
-    </svg>
-  </div>
-  <h2 class="dialog__headline" id="dialog-title">Start a new session?</h2>
-  <p class="dialog__body">You'll choose fresh settings for a new group. Your saved questions will stay.</p>
+  <h2 class="dialog__headline" id="dialog-title"></h2>
+  <p class="dialog__body" id="dialog-body-text"></p>
   <div class="dialog__actions">
-    <button class="btn-text" id="dialog-cancel">Keep going</button>
-    <button class="btn-text dialog__confirm" id="dialog-confirm">New session</button>
+    <button class="btn-text" id="dialog-cancel">Cancel</button>
+    <button class="btn-text dialog__confirm" id="dialog-confirm"></button>
   </div>
 </div>
 
@@ -381,6 +433,7 @@ const STORAGE_FILTERS  = 'conv_card_filters';
 const STORAGE_FAVS     = 'conv_card_favorites';
 const STORAGE_SETUP    = 'conv_card_setup_done';
 const STORAGE_THEME    = 'conv_card_theme';
+const APP_VERSION      = '1.1.0';
 
 const ALL_CATEGORIES = [
   'childhood','travel','work_ambition','values_beliefs','relationships',
@@ -405,14 +458,17 @@ let pool        = [];
 let seen        = [];
 let current     = null;
 let currentView = 'cards';
+let _dialogCb   = null;
 
 /* ─── DOM refs ──────────────────────────── */
 const setupView    = document.getElementById('setup-view');
 const cardView     = document.getElementById('card-view');
 const favoritesView= document.getElementById('favorites-view');
+const settingsView = document.getElementById('settings-view');
 const navBar       = document.getElementById('nav-bar');
 const navCards     = document.getElementById('nav-cards');
 const navSaved     = document.getElementById('nav-saved');
+const navSettings  = document.getElementById('nav-settings');
 const cardArea     = document.getElementById('card-area');
 const cardActions  = document.getElementById('card-actions');
 const poolInfo     = document.getElementById('pool-info');
@@ -431,7 +487,6 @@ const btnApply     = document.getElementById('btn-apply-filters');
 const btnReset     = document.getElementById('btn-reset-filters');
 const typeLabel    = document.getElementById('type-label');
 const chipsType    = document.getElementById('chips-type');
-const btnTheme     = document.getElementById('btn-theme');
 const btnNewSess   = document.getElementById('btn-new-session');
 const savedChip    = document.getElementById('saved-chip');
 const savedChipCnt = document.getElementById('saved-chip-count');
@@ -439,6 +494,12 @@ const dialogScrim  = document.getElementById('dialog-scrim');
 const resetDialog  = document.getElementById('reset-dialog');
 const dialogCancel = document.getElementById('dialog-cancel');
 const dialogConf   = document.getElementById('dialog-confirm');
+const btnClearSaved= document.getElementById('btn-clear-saved');
+const btnClearHist = document.getElementById('btn-clear-history');
+const btnCheckUpd  = document.getElementById('btn-check-update');
+const btnDoUpd     = document.getElementById('btn-do-update');
+const updateStatus = document.getElementById('update-status');
+const themeSeg     = document.getElementById('settings-theme-seg');
 
 /* ─── Boot ──────────────────────────────── */
 function init() {
@@ -451,7 +512,6 @@ function init() {
   if (localStorage.getItem(STORAGE_SETUP)) {
     enterApp();
   }
-  // Otherwise setup view is already visible (default active state)
 }
 
 /* ─── Theme ─────────────────────────────── */
@@ -461,16 +521,23 @@ function loadTheme() {
   }
 }
 
-function toggleTheme() {
-  const isLight = document.documentElement.classList.toggle('light');
-  localStorage.setItem(STORAGE_THEME, isLight ? 'light' : 'dark');
-  // Update meta theme-color so the browser chrome matches
+function setTheme(mode) {
+  const isLight = mode === 'light';
+  document.documentElement.classList.toggle('light', isLight);
+  localStorage.setItem(STORAGE_THEME, mode);
   document.querySelector('meta[name="theme-color"]')
     .setAttribute('content', isLight ? '#FFFBFE' : '#1C1B1F');
+  // Sync theme segmented buttons if visible
+  document.querySelectorAll('#settings-theme-seg .seg-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.theme === mode));
 }
 
-/* ─── New Session Dialog ────────────────── */
-function openResetDialog() {
+/* ─── Generic Alert Dialog ──────────────── */
+function openDialog({ title, body, confirmText, cb }) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-body-text').textContent = body;
+  dialogConf.textContent = confirmText;
+  _dialogCb = cb;
   resetDialog.removeAttribute('aria-hidden');
   dialogScrim.removeAttribute('aria-hidden');
   dialogScrim.classList.add('open');
@@ -478,20 +545,29 @@ function openResetDialog() {
   dialogConf.focus();
 }
 
-function closeResetDialog() {
+function closeDialog() {
+  _dialogCb = null;
   resetDialog.setAttribute('aria-hidden', 'true');
   dialogScrim.setAttribute('aria-hidden', 'true');
   dialogScrim.classList.remove('open');
   resetDialog.classList.remove('open');
 }
 
+/* ─── New Session ───────────────────────── */
+function openResetDialog() {
+  openDialog({
+    title: 'Start a new session?',
+    body: "You'll choose fresh settings for a new group. Your saved questions will stay.",
+    confirmText: 'New session',
+    cb: confirmReset,
+  });
+}
+
 function confirmReset() {
-  closeResetDialog();
-  // Clear session but keep favorites and theme
   localStorage.removeItem(STORAGE_SETUP);
   seen = [];
   current = null;
-  // Reset the setup UI to defaults
+  // Reset setup UI to defaults
   document.querySelectorAll('.setting-card').forEach((b, i) => {
     b.classList.toggle('active', i === 0);
     b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
@@ -501,12 +577,12 @@ function confirmReset() {
     b.classList.toggle('active', isMix);
     b.setAttribute('aria-pressed', isMix ? 'true' : 'false');
   });
-  // Go back to setup
   navBar.style.display    = 'none';
   btnFilter.style.display = 'none';
   btnNewSess.style.display= 'none';
   cardView.classList.remove('active');
   favoritesView.classList.remove('active');
+  settingsView.classList.remove('active');
   setupView.classList.add('active');
   currentView = 'setup';
 }
@@ -520,11 +596,9 @@ function updateSavedChip() {
 
 /* ─── Setup flow ────────────────────────── */
 function completeSetup() {
-  // Read setting choice
   const settingBtn = document.querySelector('#setup-setting .setting-card.active');
   if (settingBtn) filters.setting = settingBtn.dataset.val;
 
-  // Read depth choice — comma-separated string "1,2,3"
   const depthBtn = document.querySelector('#setup-depth .depth-card.active');
   if (depthBtn) filters.depths = depthBtn.dataset.depths.split(',').map(Number);
 
@@ -783,17 +857,23 @@ function showView(name) {
   currentView = name;
   cardView.classList.toggle('active',      name === 'cards');
   favoritesView.classList.toggle('active', name === 'favorites');
+  settingsView.classList.toggle('active',  name === 'settings');
 
   navCards.classList.toggle('active', name === 'cards');
   navCards.setAttribute('aria-current', name === 'cards' ? 'page' : 'false');
   navSaved.classList.toggle('active', name === 'favorites');
   navSaved.setAttribute('aria-current', name === 'favorites' ? 'page' : 'false');
+  navSettings.classList.toggle('active', name === 'settings');
+  navSettings.setAttribute('aria-current', name === 'settings' ? 'page' : 'false');
 
   btnFilter.style.display = name === 'cards' ? '' : 'none';
-  viewTitle.textContent   = name === 'cards' ? 'Conversation Cards' : 'Saved';
+  viewTitle.textContent = name === 'cards'    ? 'Conversation Cards'
+                        : name === 'favorites' ? 'Saved'
+                        : 'Settings';
   updateSavedChip();
 
   if (name === 'favorites') renderFavorites();
+  if (name === 'settings')  updateSettingsView();
 }
 
 /* ─── Favorites ─────────────────────────── */
@@ -841,6 +921,67 @@ function renderFavorites() {
   });
 }
 
+/* ─── Settings ──────────────────────────── */
+function updateSettingsView() {
+  const n = favorites.length;
+  document.getElementById('settings-saved-count').textContent =
+    n === 0 ? 'Nothing saved yet' : `${n} question${n !== 1 ? 's' : ''} saved`;
+  document.getElementById('settings-version').textContent = `v${APP_VERSION}`;
+
+  const isLight = document.documentElement.classList.contains('light');
+  document.querySelectorAll('#settings-theme-seg .seg-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.theme === (isLight ? 'light' : 'dark')));
+}
+
+async function checkForUpdate() {
+  btnCheckUpd.disabled = true;
+  updateStatus.className = 'update-status';
+  updateStatus.textContent = 'Checking…';
+  btnDoUpd.style.display = 'none';
+
+  try {
+    const res = await fetch('./version.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Network error');
+    const data = await res.json();
+    const remote = data.version;
+
+    if (remote && remote !== APP_VERSION) {
+      updateStatus.textContent = `Update available: v${remote}`;
+      updateStatus.className   = 'update-status update-status--available';
+      btnDoUpd.style.display   = '';
+    } else {
+      updateStatus.textContent = `You’re up to date (v${APP_VERSION})`;
+      updateStatus.className   = 'update-status update-status--ok';
+    }
+  } catch(e) {
+    updateStatus.textContent = 'Couldn’t check for updates. Try again when online.';
+    updateStatus.className   = 'update-status update-status--error';
+  } finally {
+    btnCheckUpd.disabled = false;
+  }
+}
+
+async function performUpdate() {
+  btnDoUpd.disabled    = true;
+  updateStatus.textContent = 'Clearing cache…';
+
+  try {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter(k => k.startsWith('conv-cards-')).map(k => caches.delete(k))
+    );
+  } catch(e) { /* Cache API may be unavailable */ }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration('./sw.js');
+      if (reg) await reg.unregister();
+    } catch(e) { /* ignore */ }
+  }
+
+  location.reload(true);
+}
+
 /* ─── Filter sheet ──────────────────────── */
 function openSheet()  {
   filterSheet.classList.add('open');
@@ -879,17 +1020,23 @@ function toggleTypeSection() {
   typeLabel.setAttribute('aria-expanded', String(!collapsed));
 }
 
-/* ─── Event wiring (called once) ────────── */
+/* ─── Event wiring ───────────────────────── */
 function wireEvents() {
-  /* Theme & new session */
-  btnTheme.addEventListener('click', toggleTheme);
+  /* New session */
   btnNewSess.addEventListener('click', openResetDialog);
-  dialogCancel.addEventListener('click', closeResetDialog);
-  dialogConf.addEventListener('click', confirmReset);
-  dialogScrim.addEventListener('click', closeResetDialog);
+
+  /* Generic dialog */
+  dialogConf.addEventListener('click', () => {
+    const cb = _dialogCb;
+    closeDialog();
+    if (cb) cb();
+  });
+  dialogCancel.addEventListener('click', closeDialog);
+  dialogScrim.addEventListener('click', closeDialog);
+
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    if (resetDialog.classList.contains('open'))  closeResetDialog();
+    if (resetDialog.classList.contains('open'))  closeDialog();
     if (filterSheet.classList.contains('open')) closeSheet();
   });
 
@@ -924,6 +1071,7 @@ function wireEvents() {
   /* Nav */
   navCards.addEventListener('click', () => showView('cards'));
   navSaved.addEventListener('click', () => showView('favorites'));
+  navSettings.addEventListener('click', () => showView('settings'));
 
   /* Card actions */
   btnNext.addEventListener('click', doNext);
@@ -961,7 +1109,7 @@ function wireEvents() {
     const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
     const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
     const types      = [...document.querySelectorAll('#chips-type     .chip.active')].map(c => c.dataset.val);
-    const setting    = document.querySelector('.seg-btn.active')?.dataset.val || 'any';
+    const setting    = document.querySelector('#chips-setting .seg-btn.active')?.dataset.val || 'any';
 
     filters = {
       depths:     depths.length     ? depths     : [1,2,3],
@@ -981,6 +1129,45 @@ function wireEvents() {
     filters = { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
     applyFiltersToChips();
   });
+
+  /* Settings — theme */
+  themeSeg.addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    setTheme(btn.dataset.theme);
+  });
+
+  /* Settings — clear saved */
+  btnClearSaved.addEventListener('click', () => {
+    if (!favorites.length) return;
+    openDialog({
+      title: 'Clear saved questions?',
+      body: `This will permanently remove all ${favorites.length} saved question${favorites.length !== 1 ? 's' : ''}. This cannot be undone.`,
+      confirmText: 'Clear all',
+      cb: () => {
+        favorites = [];
+        saveFavs();
+        updateSettingsView();
+      },
+    });
+  });
+
+  /* Settings — clear session history */
+  btnClearHist.addEventListener('click', () => {
+    openDialog({
+      title: 'Clear session history?',
+      body: 'All cards will be marked as unseen and you\'ll start fresh from the full deck.',
+      confirmText: 'Clear history',
+      cb: () => {
+        seen = [];
+        if (currentView === 'cards') drawCard(true);
+      },
+    });
+  });
+
+  /* Settings — update */
+  btnCheckUpd.addEventListener('click', checkForUpdate);
+  btnDoUpd.addEventListener('click', performUpdate);
 }
 
 /* ─── Go ── */
