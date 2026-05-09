@@ -277,9 +277,11 @@
           <div class="settings-item__content">
             <span class="settings-item__title">Saved questions</span>
             <span class="settings-item__sub" id="settings-saved-count-data">Tap the heart to bookmark cards</span>
+            <div class="settings-item__actions">
+              <button class="btn-outlined" id="btn-export-saved">Export</button>
+              <button class="btn-outlined" id="btn-clear-saved">Clear</button>
+            </div>
           </div>
-          <button class="btn-outlined" id="btn-export-saved">Export</button>
-          <button class="btn-outlined" id="btn-clear-saved">Clear</button>
         </div>
         <div class="settings-item">
           <div class="settings-item__icon" aria-hidden="true">
@@ -467,7 +469,7 @@
   </div><!-- /.sheet__scroll -->
 
   <div class="sheet__footer">
-    <button class="btn-text" id="btn-reset-filters">Reset all</button>
+    <button class="btn-outlined" id="btn-reset-filters">Reset all</button>
     <button class="btn-outlined btn-surprise" id="btn-surprise" aria-label="Randomize filters">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
