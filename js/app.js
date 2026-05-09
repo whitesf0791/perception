@@ -134,6 +134,26 @@ function enterApp() {
   drawCard(true);
 }
 
+/* ── Surprise me ────────────────────────────── */
+function surpriseMe() {
+  const depthOptions = [
+    [1,2,3],[1,2,3],[1,2,3],
+    [1,2],
+    [2,3],
+    [2],
+  ];
+  const depths = depthOptions[Math.floor(Math.random() * depthOptions.length)];
+  const shuffled = [...ALL_CATEGORIES].sort(() => Math.random() - 0.5);
+  const categories = shuffled.slice(0, 3 + Math.round(Math.random()));
+  filters = { categories, depths, setting: filters.setting, types: [...ALL_TYPES] };
+  saveFilters(filters);
+  buildPool();
+  ui.updateFilterBadge(filters);
+  ui.applyFiltersToChips(filters);
+  ui.closeSheet();
+  if (currentView === 'cards') drawCard(true);
+}
+
 /* ── Session reset ──────────────────────────── */
 function openResetDialog() {
   ui.openDialog({
@@ -293,6 +313,8 @@ function wireEvents() {
   ui.els.typeLabel.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ui.toggleTypeSection(); }
   });
+
+  ui.els.btnSurprise.addEventListener('click', surpriseMe);
 
   ui.els.btnApply.addEventListener('click', () => {
     const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));

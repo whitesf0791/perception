@@ -26,6 +26,7 @@ export const els = {
   filterSheet:  document.getElementById('filter-sheet'),
   btnApply:     document.getElementById('btn-apply-filters'),
   btnReset:     document.getElementById('btn-reset-filters'),
+  btnSurprise:  document.getElementById('btn-surprise'),
   typeLabel:    document.getElementById('type-label'),
   chipsType:    document.getElementById('chips-type'),
   btnNewSess:   document.getElementById('btn-new-session'),

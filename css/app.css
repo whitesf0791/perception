@@ -1629,6 +1629,11 @@ html.light .saved-chip {
 .btn-outlined:active::before { opacity: 0.12; }
 .btn-outlined:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 .btn-outlined:disabled { opacity: 0.38; cursor: default; }
+.btn-surprise {
+  gap: 6px;
+  padding: 0 16px;
+}
+.btn-surprise svg { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* Update flow */
 .update-status {
