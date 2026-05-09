@@ -21,6 +21,39 @@
   <header class="top-app-bar" id="top-bar" role="banner">
     <span class="top-app-bar__title" id="view-title">Conversation Cards</span>
     <div class="top-app-bar__actions" id="top-bar-actions">
+      <!-- New session — hidden during setup -->
+      <button class="icon-btn" id="btn-new-session" style="display:none" aria-label="Start new session">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
+        </svg>
+      </button>
+      <!-- Theme toggle — visible everywhere -->
+      <button class="icon-btn" id="btn-theme" aria-label="Toggle light or dark theme">
+        <!-- Moon: visible in dark mode -->
+        <svg class="theme-icon theme-icon--moon" xmlns="http://www.w3.org/2000/svg"
+             width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+        <!-- Sun: visible in light mode -->
+        <svg class="theme-icon theme-icon--sun" xmlns="http://www.w3.org/2000/svg"
+             width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <!-- Filter — hidden during setup and on saved view -->
       <button class="icon-btn" id="btn-filter" aria-label="Filter questions" style="display:none">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -138,6 +171,14 @@
            aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="progress-track">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
+      <button class="saved-chip" id="saved-chip" style="display:none"
+              aria-label="View saved questions">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+             fill="currentColor" stroke="none" aria-hidden="true">
+          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span id="saved-chip-count">0</span>
+      </button>
     </div>
 
     <div class="card-area" id="card-area">
@@ -310,6 +351,28 @@
   </div>
 </div><!-- /#filter-sheet -->
 
+<!-- ══════════════════════════════════════
+     NEW SESSION DIALOG (MD3 Alert Dialog)
+══════════════════════════════════════ -->
+<div class="dialog-scrim" id="dialog-scrim" aria-hidden="true"></div>
+<div class="dialog" id="reset-dialog"
+     role="alertdialog" aria-modal="true"
+     aria-labelledby="dialog-title" aria-hidden="true">
+  <div class="dialog__icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
+    </svg>
+  </div>
+  <h2 class="dialog__headline" id="dialog-title">Start a new session?</h2>
+  <p class="dialog__body">You'll choose fresh settings for a new group. Your saved questions will stay.</p>
+  <div class="dialog__actions">
+    <button class="btn-text" id="dialog-cancel">Keep going</button>
+    <button class="btn-text dialog__confirm" id="dialog-confirm">New session</button>
+  </div>
+</div>
+
 <script type="module">
 import { questions } from './data/questions.js';
 
@@ -317,6 +380,7 @@ import { questions } from './data/questions.js';
 const STORAGE_FILTERS  = 'conv_card_filters';
 const STORAGE_FAVS     = 'conv_card_favorites';
 const STORAGE_SETUP    = 'conv_card_setup_done';
+const STORAGE_THEME    = 'conv_card_theme';
 
 const ALL_CATEGORIES = [
   'childhood','travel','work_ambition','values_beliefs','relationships',
@@ -367,19 +431,91 @@ const btnApply     = document.getElementById('btn-apply-filters');
 const btnReset     = document.getElementById('btn-reset-filters');
 const typeLabel    = document.getElementById('type-label');
 const chipsType    = document.getElementById('chips-type');
+const btnTheme     = document.getElementById('btn-theme');
+const btnNewSess   = document.getElementById('btn-new-session');
+const savedChip    = document.getElementById('saved-chip');
+const savedChipCnt = document.getElementById('saved-chip-count');
+const dialogScrim  = document.getElementById('dialog-scrim');
+const resetDialog  = document.getElementById('reset-dialog');
+const dialogCancel = document.getElementById('dialog-cancel');
+const dialogConf   = document.getElementById('dialog-confirm');
 
 /* ─── Boot ──────────────────────────────── */
 function init() {
+  loadTheme();
   wireEvents();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   }
 
   if (localStorage.getItem(STORAGE_SETUP)) {
-    // Returning user — skip setup, go straight to cards
     enterApp();
   }
-  // Otherwise the setup view is already visible (default active state)
+  // Otherwise setup view is already visible (default active state)
+}
+
+/* ─── Theme ─────────────────────────────── */
+function loadTheme() {
+  if (localStorage.getItem(STORAGE_THEME) === 'light') {
+    document.documentElement.classList.add('light');
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem(STORAGE_THEME, isLight ? 'light' : 'dark');
+  // Update meta theme-color so the browser chrome matches
+  document.querySelector('meta[name="theme-color"]')
+    .setAttribute('content', isLight ? '#FFFBFE' : '#1C1B1F');
+}
+
+/* ─── New Session Dialog ────────────────── */
+function openResetDialog() {
+  resetDialog.removeAttribute('aria-hidden');
+  dialogScrim.removeAttribute('aria-hidden');
+  dialogScrim.classList.add('open');
+  resetDialog.classList.add('open');
+  dialogConf.focus();
+}
+
+function closeResetDialog() {
+  resetDialog.setAttribute('aria-hidden', 'true');
+  dialogScrim.setAttribute('aria-hidden', 'true');
+  dialogScrim.classList.remove('open');
+  resetDialog.classList.remove('open');
+}
+
+function confirmReset() {
+  closeResetDialog();
+  // Clear session but keep favorites and theme
+  localStorage.removeItem(STORAGE_SETUP);
+  seen = [];
+  current = null;
+  // Reset the setup UI to defaults
+  document.querySelectorAll('.setting-card').forEach((b, i) => {
+    b.classList.toggle('active', i === 0);
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+  });
+  document.querySelectorAll('.depth-card').forEach(b => {
+    const isMix = b.classList.contains('mix-card');
+    b.classList.toggle('active', isMix);
+    b.setAttribute('aria-pressed', isMix ? 'true' : 'false');
+  });
+  // Go back to setup
+  navBar.style.display    = 'none';
+  btnFilter.style.display = 'none';
+  btnNewSess.style.display= 'none';
+  cardView.classList.remove('active');
+  favoritesView.classList.remove('active');
+  setupView.classList.add('active');
+  currentView = 'setup';
+}
+
+/* ─── Saved chip ────────────────────────── */
+function updateSavedChip() {
+  const n = favorites.length;
+  savedChipCnt.textContent = n;
+  savedChip.style.display  = n > 0 ? '' : 'none';
 }
 
 /* ─── Setup flow ────────────────────────── */
@@ -398,16 +534,12 @@ function completeSetup() {
 }
 
 function enterApp() {
-  // Show the app chrome
-  navBar.style.display   = '';
-  btnFilter.style.display = '';
-
-  // Sync filter chips with whatever filters are active
+  navBar.style.display    = '';
+  btnNewSess.style.display = '';
   applyFiltersToChips();
   buildPool();
   updateFilterBadge();
-
-  // Switch views
+  updateSavedChip();
   setupView.classList.remove('active');
   showView('cards');
   drawCard(true);
@@ -441,6 +573,7 @@ function loadFavs() {
 
 function saveFavs() {
   localStorage.setItem(STORAGE_FAVS, JSON.stringify(favorites));
+  updateSavedChip();
 }
 
 /* ─── Pool ──────────────────────────────── */
@@ -658,6 +791,7 @@ function showView(name) {
 
   btnFilter.style.display = name === 'cards' ? '' : 'none';
   viewTitle.textContent   = name === 'cards' ? 'Conversation Cards' : 'Saved';
+  updateSavedChip();
 
   if (name === 'favorites') renderFavorites();
 }
@@ -747,6 +881,21 @@ function toggleTypeSection() {
 
 /* ─── Event wiring (called once) ────────── */
 function wireEvents() {
+  /* Theme & new session */
+  btnTheme.addEventListener('click', toggleTheme);
+  btnNewSess.addEventListener('click', openResetDialog);
+  dialogCancel.addEventListener('click', closeResetDialog);
+  dialogConf.addEventListener('click', confirmReset);
+  dialogScrim.addEventListener('click', closeResetDialog);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (resetDialog.classList.contains('open'))  closeResetDialog();
+    if (filterSheet.classList.contains('open')) closeSheet();
+  });
+
+  /* Saved chip → navigate to saved view */
+  savedChip.addEventListener('click', () => showView('favorites'));
+
   /* Setup screen */
   document.getElementById('btn-start').addEventListener('click', completeSetup);
 
@@ -783,9 +932,6 @@ function wireEvents() {
   /* Filter sheet */
   btnFilter.addEventListener('click', openSheet);
   scrim.addEventListener('click', closeSheet);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && filterSheet.classList.contains('open')) closeSheet();
-  });
 
   /* Filter chips */
   document.getElementById('chips-depth').addEventListener('click', e => {

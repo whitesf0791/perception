@@ -1325,3 +1325,183 @@ html, body {
 .setup-cta:hover::before  { opacity: 0.08; }
 .setup-cta:active::before { opacity: 0.12; }
 .setup-cta:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 3px; }
+
+/* ══════════════════════════════════════════
+   LIGHT THEME — MD3 purple seed, light scheme
+   Applied when <html class="light">
+══════════════════════════════════════════ */
+
+html.light {
+  /* Surface */
+  --md-bg:                    #FFFBFE;
+  --md-surface:               #FFFBFE;
+  --md-surface-dim:           #DED8E1;
+  --md-surface-container-low: #F7F2FA;
+  --md-surface-container:     #F3EDF7;
+  --md-surface-container-high:#ECE6F0;
+  --md-surface-container-highest: #E6E0E9;
+
+  /* Primary */
+  --md-primary:               #6750A4;
+  --md-on-primary:            #FFFFFF;
+  --md-primary-container:     #EADDFF;
+  --md-on-primary-container:  #21005D;
+
+  /* Secondary */
+  --md-secondary:             #625B71;
+  --md-on-secondary:          #FFFFFF;
+  --md-secondary-container:   #E8DEF8;
+  --md-on-secondary-container:#1D192B;
+
+  /* Tertiary */
+  --md-tertiary:              #7D5260;
+  --md-tertiary-container:    #FFD8E4;
+
+  /* On-surface */
+  --md-on-surface:            #1C1B1F;
+  --md-on-surface-variant:    #49454F;
+  --md-outline:               #79747E;
+  --md-outline-variant:       #CAC4D0;
+
+  /* Error */
+  --md-error:                 #B3261E;
+
+  /* Inverse */
+  --md-inverse-surface:       #313033;
+  --md-inverse-on-surface:    #F4EFF4;
+  --md-inverse-primary:       #D0BCFF;
+
+  /* Depth colors — darker foreground for light backgrounds */
+  --depth1-color:             #1B6B3A;
+  --depth1-container:         #C8F5DC;
+  --depth2-color:             #7A4F00;
+  --depth2-container:         #FFEAB0;
+  --depth3-color:             #8C1D18;
+  --depth3-container:         #FFD7D3;
+}
+
+/* ── Theme icon visibility ───────────────── */
+/* Default (dark): show moon, hide sun */
+.theme-icon--sun  { display: none; }
+.theme-icon--moon { display: block; }
+/* Light mode: show sun, hide moon */
+html.light .theme-icon--sun  { display: block; }
+html.light .theme-icon--moon { display: none; }
+
+/* ── MD3 Alert Dialog ───────────────────── */
+.dialog-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+}
+.dialog-scrim.open { display: block; }
+
+.dialog {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  width: calc(100% - 48px);
+  max-width: 400px;
+  background: var(--md-surface-container-highest);
+  border-radius: var(--shape-xl);
+  padding: 24px 24px 0;
+  z-index: 301;
+  box-shadow:
+    0 4px 8px 3px rgba(0,0,0,0.15),
+    0 1px 3px rgba(0,0,0,0.3);
+  transition: transform var(--motion-medium), opacity var(--motion-medium);
+  opacity: 0;
+}
+
+.dialog.open {
+  display: block;
+  animation: dialog-enter var(--motion-medium) forwards;
+}
+
+@keyframes dialog-enter {
+  from { transform: translate(-50%, -50%) scale(0.92); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+}
+
+.dialog__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--md-secondary);
+}
+
+.dialog__headline {
+  /* MD3 Headline Small */
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 400;
+  color: var(--md-on-surface);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.dialog__body {
+  /* MD3 Body Medium */
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 0 16px;
+  border-top: 1px solid var(--md-outline-variant);
+}
+
+.dialog__confirm {
+  color: var(--md-primary);
+  font-weight: 600;
+}
+
+/* ── Saved chip (in pool-row) ────────────── */
+.saved-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  border: none;
+  border-radius: var(--shape-full);
+  background: var(--md-tertiary-container);
+  color: var(--md-tertiary);
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--motion-short);
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.saved-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--motion-short);
+}
+.saved-chip:hover::before  { opacity: 0.08; }
+.saved-chip:active::before { opacity: 0.16; }
+html.light .saved-chip {
+  background: var(--md-tertiary-container);
+  color: var(--md-tertiary);
+}
