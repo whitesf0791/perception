@@ -132,7 +132,7 @@ export function showView(name, savedCount) {
 }
 
 /* ── Favorites list ─────────────────────────── */
-export function renderFavorites(savedQs, onRemove) {
+export function renderFavorites(savedQs, notes, onRemove, onNote) {
   els.favsCount.textContent = savedQs.length
     ? `${savedQs.length} question${savedQs.length !== 1 ? 's' : ''}`
     : '';
@@ -153,12 +153,26 @@ export function renderFavorites(savedQs, onRemove) {
 
   els.favsList.innerHTML = '';
   savedQs.forEach(q => {
+    const note = notes[q.id] || '';
+    const notePreview = note
+      ? `<p class="fav-item__note">${note.length > 80 ? note.slice(0, 78) + '…' : note}</p>`
+      : '';
     const item = document.createElement('div');
     item.className = 'fav-item';
     item.setAttribute('role', 'listitem');
     item.innerHTML = `
       <div class="fav-item__depth d${q.depth}" aria-hidden="true"></div>
-      <p class="fav-item__text">${q.question}</p>
+      <div class="fav-item__body">
+        <p class="fav-item__text">${q.question}</p>
+        ${notePreview}
+      </div>
+      <button class="fav-item__note-btn${note ? ' has-note' : ''}" data-id="${q.id}" aria-label="${note ? 'Edit note' : 'Add note'}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </button>
       <button class="fav-item__remove" data-id="${q.id}" aria-label="Remove from saved">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -168,8 +182,47 @@ export function renderFavorites(savedQs, onRemove) {
     item.querySelector('.fav-item__remove').addEventListener('click', e => {
       onRemove(Number(e.currentTarget.dataset.id));
     });
+    item.querySelector('.fav-item__note-btn').addEventListener('click', e => {
+      onNote(Number(e.currentTarget.dataset.id));
+    });
     els.favsList.appendChild(item);
   });
+}
+
+let _noteCb = null;
+export function openNoteDialog(id, existingText, questionText, cb) {
+  _noteCb = cb;
+  const dlg      = document.getElementById('note-dialog');
+  const scrim    = document.getElementById('note-scrim');
+  const textarea = document.getElementById('note-textarea');
+  const counter  = document.getElementById('note-char-count');
+  const title    = document.getElementById('note-dialog-title');
+  const qEl      = document.getElementById('note-dialog-question');
+  title.textContent = existingText ? 'Edit note' : 'Add a note';
+  qEl.textContent   = questionText;
+  textarea.value = existingText;
+  counter.textContent = `${existingText.length} / 500`;
+  dlg.setAttribute('aria-hidden', 'false');
+  dlg.classList.add('open');
+  scrim.setAttribute('aria-hidden', 'false');
+  scrim.classList.add('open');
+  textarea.focus();
+}
+
+export function closeNoteDialog() {
+  const dlg   = document.getElementById('note-dialog');
+  const scrim = document.getElementById('note-scrim');
+  dlg.classList.remove('open');
+  dlg.setAttribute('aria-hidden', 'true');
+  scrim.classList.remove('open');
+  scrim.setAttribute('aria-hidden', 'true');
+  _noteCb = null;
+}
+
+export function confirmNoteDialog() {
+  const text = document.getElementById('note-textarea').value;
+  if (_noteCb) _noteCb(text);
+  closeNoteDialog();
 }
 
 /* ── Settings panel ─────────────────────────── */
