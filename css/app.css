@@ -1505,3 +1505,128 @@ html.light .saved-chip {
   background: var(--md-tertiary-container);
   color: var(--md-tertiary);
 }
+
+/* ══════════════════════════════════════════
+   SETTINGS VIEW
+══════════════════════════════════════════ */
+
+#settings-view {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.settings-scroll {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  gap: 12px;
+}
+
+.settings-group {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-lg);
+  overflow: hidden;
+}
+
+.settings-group__label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--md-primary);
+  padding: 14px 16px 6px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--md-outline-variant);
+}
+
+.settings-item--col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.settings-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-item__title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.settings-item__sub {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+}
+
+/* MD3 Outlined Button */
+.btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--shape-full);
+  background: transparent;
+  color: var(--md-primary);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color var(--motion-short);
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.btn-outlined::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--md-primary);
+  opacity: 0;
+  transition: opacity var(--motion-short);
+}
+.btn-outlined:hover::before  { opacity: 0.08; }
+.btn-outlined:active::before { opacity: 0.12; }
+.btn-outlined:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.btn-outlined:disabled { opacity: 0.38; cursor: default; }
+
+/* Update flow */
+.update-status {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+  min-height: 18px;
+}
+.update-status--available { color: var(--md-primary); font-weight: 500; }
+.update-status--ok        { color: var(--depth1-color); }
+.update-status--error     { color: var(--md-error); }
+
+.settings-update-btn {
+  height: 40px;
+  flex: none;
+}
