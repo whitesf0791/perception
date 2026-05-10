@@ -288,24 +288,26 @@ async function checkForUpdate() {
 }
 
 async function performUpdate() {
-  ui.els.btnDoUpd.disabled          = true;
-  ui.els.updateStatus.textContent   = 'Clearing cache…';
+  ui.els.btnDoUpd.disabled        = true;
+  ui.els.updateStatus.textContent = 'Clearing cache…';
 
+  // Delete every cache, not just conv-cards-* in case any stray entries exist
   try {
     const keys = await caches.keys();
-    await Promise.all(
-      keys.filter(k => k.startsWith('conv-cards-')).map(k => caches.delete(k))
-    );
-  } catch(e) { /* Cache API may be unavailable */ }
+    await Promise.all(keys.map(k => caches.delete(k)));
+  } catch(e) {}
 
+  // Unregister every SW registration, not just the known one
   if ('serviceWorker' in navigator) {
     try {
-      const reg = await navigator.serviceWorker.getRegistration('./sw.js');
-      if (reg) await reg.unregister();
-    } catch(e) { /* ignore */ }
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    } catch(e) {}
   }
 
-  location.reload(true);
+  // Cache-bust query param forces the browser past its own HTTP cache.
+  // location.reload(true) is deprecated and browsers don't reliably honor it.
+  window.location.replace(location.pathname + '?r=' + Date.now());
 }
 
 /* ── Event wiring ───────────────────────────── */
