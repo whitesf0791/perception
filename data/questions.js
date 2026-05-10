@@ -329,4 +329,84 @@ export const questions = [
   { id: 291, question: "Has a place ever changed who you were, even a little? What was it and what shifted?", depth: 3, category: "travel", setting: "one_on_one", type: "reveal" },
   // random
   { id: 292, question: "What do you think people consistently get wrong about you — and why do you think that gap exists?", depth: 3, category: "random", setting: "one_on_one", type: "reveal" },
+
+  // DEPTH 1 — One-on-one targeted additions
+  { id: 293, question: "What's something about yourself you find easy to share with strangers but hard to say to people close to you?", depth: 1, category: "relationships", setting: "one_on_one", type: "reveal" },
+  { id: 294, question: "What's something you've never told anyone you're quietly good at?", depth: 1, category: "random", setting: "one_on_one", type: "reveal" },
+  { id: 295, question: "What's a question you've always wanted to ask someone but usually talk yourself out of?", depth: 1, category: "random", setting: "one_on_one", type: "reveal" },
+  { id: 296, question: "What's a side of yourself that most people in your current life have never seen?", depth: 1, category: "childhood", setting: "one_on_one", type: "reveal" },
+  { id: 297, question: "What's a place that felt like it was made specifically for you the moment you arrived?", depth: 1, category: "travel", setting: "one_on_one", type: "memory" },
+  { id: 298, question: "What's something small the person across from you does that you actually appreciate?", depth: 1, category: "relationships", setting: "one_on_one", type: "reveal" },
+  { id: 299, question: "If you could change one thing about how today is going, what would it be?", depth: 1, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+
+  // DEPTH 2 — Second pass: unexplored territory
+  // hypothetical (first depth-2 questions for this category)
+  { id: 300, question: "If you had to bet on one person from your life becoming genuinely well-known in twenty years, who would it be and why?", depth: 2, category: "hypothetical", setting: "both", type: "hypothetical" },
+  { id: 301, question: "If you could only be known for one thing after you're gone, what would you want it to be?", depth: 2, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+  { id: 302, question: "If you had to redesign your life from scratch starting today — same city, same people, different choices — what would change first?", depth: 2, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+  { id: 303, question: "If you could spend a year living completely differently — different work, different rhythms, different context — what would you try?", depth: 2, category: "hypothetical", setting: "both", type: "hypothetical" },
+  { id: 304, question: "If the only thing that survived you were your actual values — not your words about them — what would the world inherit?", depth: 2, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+  // work_ambition
+  { id: 305, question: "What does it feel like when you're doing your best work — and how often does that actually happen?", depth: 2, category: "work_ambition", setting: "both", type: "reveal" },
+  { id: 306, question: "What's something you've never been formally recognized for at work that you think deserves acknowledgment?", depth: 2, category: "work_ambition", setting: "both", type: "reveal" },
+  { id: 307, question: "What role have you played on a team that had no title but was genuinely important?", depth: 2, category: "work_ambition", setting: "both", type: "reveal" },
+  { id: 308, question: "What's a version of your career that genuinely excites you — even if it's not the one you're currently building?", depth: 2, category: "work_ambition", setting: "one_on_one", type: "reveal" },
+  // values_beliefs
+  { id: 309, question: "What's something you believe is true that most people in your life would disagree with?", depth: 2, category: "values_beliefs", setting: "both", type: "opinion" },
+  { id: 310, question: "What's a cause or issue you think deserves far more collective attention than it gets?", depth: 2, category: "values_beliefs", setting: "both", type: "opinion" },
+  { id: 311, question: "What does fairness actually mean to you — and have you ever acted against your own definition of it?", depth: 2, category: "values_beliefs", setting: "one_on_one", type: "reveal" },
+  { id: 312, question: "What do you think your generation gets consistently misunderstood about?", depth: 2, category: "values_beliefs", setting: "both", type: "opinion" },
+  // relationships
+  { id: 313, question: "What do you need from friendships now that you didn't think to look for when you were younger?", depth: 2, category: "relationships", setting: "both", type: "reveal" },
+  { id: 314, question: "What's a quality you're drawn to in people that has occasionally gotten you into trouble?", depth: 2, category: "relationships", setting: "one_on_one", type: "reveal" },
+  { id: 315, question: "What's the most generous thing someone has done for you that they probably don't even remember?", depth: 2, category: "relationships", setting: "both", type: "memory" },
+  // childhood
+  { id: 316, question: "What's a responsibility you had as a kid that shaped you in ways you're still discovering?", depth: 2, category: "childhood", setting: "both", type: "reveal" },
+  { id: 317, question: "What's something you were told about the world as a child that turned out to be more true — or more false — than expected?", depth: 2, category: "childhood", setting: "both", type: "reveal" },
+  { id: 318, question: "Who was the most influential adult in your life outside of your immediate family, and what did they give you?", depth: 2, category: "childhood", setting: "one_on_one", type: "memory" },
+  // travel
+  { id: 319, question: "What's the longest you've been away from home, and what did that stretch of time do to you?", depth: 2, category: "travel", setting: "both", type: "memory" },
+  { id: 320, question: "What's a place you returned to and found that either the place had changed — or you had?", depth: 2, category: "travel", setting: "both", type: "memory" },
+  { id: 321, question: "What does travel give you that your everyday life doesn't?", depth: 2, category: "travel", setting: "one_on_one", type: "reveal" },
+  // food_lifestyle
+  { id: 322, question: "What does the way you take care of yourself say about what you believe you deserve?", depth: 2, category: "food_lifestyle", setting: "one_on_one", type: "reveal" },
+  { id: 323, question: "What's a daily ritual you protect because it's one of the few things that's entirely yours?", depth: 2, category: "food_lifestyle", setting: "both", type: "reveal" },
+  // humor
+  { id: 324, question: "What's something you've genuinely gotten away with purely because you made someone laugh?", depth: 2, category: "humor", setting: "both", type: "memory" },
+  { id: 325, question: "What's a topic you can find the funny in that most people treat as off-limits?", depth: 2, category: "humor", setting: "both", type: "reveal" },
+  // pop_culture
+  { id: 326, question: "What's a story — in any format — that you think captures something true about the time we're living through?", depth: 2, category: "pop_culture", setting: "both", type: "opinion" },
+  { id: 327, question: "What's a creator whose work you follow closely enough that you'd notice if their style shifted?", depth: 2, category: "pop_culture", setting: "both", type: "reveal" },
+  // random
+  { id: 328, question: "What's something you changed your mind about because of a single conversation?", depth: 2, category: "random", setting: "both", type: "memory" },
+  { id: 329, question: "What's something you're still figuring out that most people your age seem to have sorted?", depth: 2, category: "random", setting: "one_on_one", type: "reveal" },
+
+  // DEPTH 3 — Second pass: thin categories
+  // travel
+  { id: 330, question: "Is there somewhere you left that you've never fully come back from — emotionally?", depth: 3, category: "travel", setting: "one_on_one", type: "reveal" },
+  { id: 331, question: "What's the most disorienting experience you've had outside your home culture, and what did it reveal about your defaults?", depth: 3, category: "travel", setting: "one_on_one", type: "reveal" },
+  { id: 332, question: "If you could choose between one place for the rest of your life or constant movement, which would you pick — and which feels more like you?", depth: 3, category: "travel", setting: "one_on_one", type: "reveal" },
+  // work_ambition
+  { id: 333, question: "What does your ambition cost the people around you — and have you made peace with that?", depth: 3, category: "work_ambition", setting: "one_on_one", type: "reveal" },
+  { id: 334, question: "What would you do professionally if you knew no one whose opinion you cared about would ever find out?", depth: 3, category: "work_ambition", setting: "one_on_one", type: "reveal" },
+  // values_beliefs
+  { id: 335, question: "What's something you believe that you've never been able to fully prove to yourself — you just act as if it's true?", depth: 3, category: "values_beliefs", setting: "one_on_one", type: "reveal" },
+  { id: 336, question: "What have you quietly excused in yourself that you wouldn't excuse in someone else?", depth: 3, category: "values_beliefs", setting: "one_on_one", type: "reveal" },
+  // childhood
+  { id: 337, question: "What's a version of love you learned early in life that you've had to consciously unlearn?", depth: 3, category: "childhood", setting: "one_on_one", type: "reveal" },
+  { id: 338, question: "What's something you developed to protect yourself as a child that still shows up as a reflex in your adult life?", depth: 3, category: "childhood", setting: "one_on_one", type: "reveal" },
+  // hypothetical
+  { id: 339, question: "If you could ask the people who shaped you one completely honest question — and they had to answer — what would you ask?", depth: 3, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+  { id: 340, question: "If you found out the choices you've made were the right ones all along, would that be a relief — or would something in you resist it?", depth: 3, category: "hypothetical", setting: "one_on_one", type: "hypothetical" },
+  // food_lifestyle
+  { id: 341, question: "What does the way you take care of your body say about what you think you deserve — and is that changing?", depth: 3, category: "food_lifestyle", setting: "one_on_one", type: "reveal" },
+  { id: 342, question: "What's a coping mechanism you've relied on for a long time that you have complicated feelings about?", depth: 3, category: "food_lifestyle", setting: "one_on_one", type: "reveal" },
+  // humor
+  { id: 343, question: "What do you use humor to avoid feeling — and how aware of it are you in the moment?", depth: 3, category: "humor", setting: "one_on_one", type: "reveal" },
+  // random
+  { id: 344, question: "What's a decision you made for genuinely good reasons that still doesn't sit right with you?", depth: 3, category: "random", setting: "one_on_one", type: "reveal" },
+  // pop_culture
+  { id: 345, question: "What's a piece of art or media that got you through something difficult — and do you still return to it when things get hard?", depth: 3, category: "pop_culture", setting: "one_on_one", type: "reveal" },
+  // dreams_future
+  { id: 346, question: "What's the life you might have built if the people around you had expected something entirely different from you?", depth: 3, category: "dreams_future", setting: "one_on_one", type: "hypothetical" },
 ];
