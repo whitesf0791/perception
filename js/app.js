@@ -3,7 +3,7 @@ import {
   STORAGE_SETUP, APP_VERSION,
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS,
   loadFilters, saveFilters, loadFavs, saveFavs,
-  loadNotes, saveNotes,
+  loadNotes, saveNotes, loadSeen, saveSeen,
 } from './store.js';
 import * as ui from './ui.js';
 
@@ -11,8 +11,8 @@ import * as ui from './ui.js';
 let filters     = loadFilters();
 let favorites   = loadFavs();
 let notes       = loadNotes();
+let seen        = loadSeen();
 let pool        = [];
-let seen        = [];
 let current     = null;
 let currentView = 'cards';
 
@@ -37,7 +37,6 @@ function buildPool() {
     if (filters.setting === 'group') return q.setting === 'both';
     return true;
   });
-  seen = [];
 }
 
 function pickNext() {
@@ -64,6 +63,7 @@ function drawCard(animate = false) {
 
 function restartPool() {
   seen = [];
+  saveSeen(seen);
   drawCard(true);
 }
 
@@ -73,6 +73,7 @@ function doUndo() {
   const prevId = seen.pop();
   const prevQ  = questions.find(q => q.id === prevId);
   if (!prevQ) return;
+  saveSeen(seen);
   ui.updateProgress(pool, seen);
   ui.syncUndoBtn(seen.length > 0);
   const show = () => {
@@ -86,6 +87,7 @@ function doUndo() {
 function doNext() {
   if (!current) return;
   seen.push(current.id);
+  saveSeen(seen);
   const card = ui.els.cardArea.querySelector('.card');
   card ? ui.exitCard(card, 'right', () => drawCard(true)) : drawCard(true);
 }
@@ -104,6 +106,7 @@ function doSave() {
     ui.updateSavedChip(favorites.length);
   }
   seen.push(id);
+  saveSeen(seen);
   const card = ui.els.cardArea.querySelector('.card');
   card ? ui.exitCard(card, 'left', () => drawCard(true)) : drawCard(true);
 }
@@ -221,6 +224,7 @@ function openResetDialog() {
 function confirmReset() {
   localStorage.removeItem(STORAGE_SETUP);
   seen = [];
+  saveSeen(seen);
   current = null;
   document.querySelectorAll('.setting-card').forEach((b, i) => {
     b.classList.toggle('active', i === 0);
@@ -440,6 +444,7 @@ function wireEvents() {
       confirmText: 'Clear history',
       cb: () => {
         seen = [];
+        saveSeen(seen);
         if (currentView === 'cards') drawCard(true);
         if (currentView === 'settings') ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: 0 });
       },
