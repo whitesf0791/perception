@@ -1,4 +1,5 @@
 import { questions } from '../data/questions.js';
+import { DECKS }     from '../data/decks.js';
 import {
   STORAGE_SETUP, APP_VERSION,
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS, FILTER_PRESETS,
@@ -17,6 +18,7 @@ let ratings     = loadRatings();
 let pool        = [];
 let current     = null;
 let currentView = 'cards';
+let activeDeck  = null;
 
 /* ── Boot ───────────────────────────────────── */
 function init() {
@@ -24,6 +26,11 @@ function init() {
   wireEvents();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
+  }
+  const hash = location.hash;
+  if (hash.startsWith('#deck=')) {
+    const d = DECKS.find(d => d.id === hash.slice(6));
+    if (d) activeDeck = d;
   }
   if (localStorage.getItem(STORAGE_SETUP)) {
     enterApp();
@@ -42,6 +49,12 @@ function buildPool() {
 }
 
 function pickNext() {
+  if (activeDeck) {
+    return activeDeck.ids
+      .map(id => questions.find(q => q.id === id))
+      .filter(Boolean)
+      .find(q => !seen.includes(q.id)) || null;
+  }
   const unseen = pool.filter(q => !seen.includes(q.id));
   if (!unseen.length) return null;
   // Weighted sampling: liked = 3×, disliked = 0.3×, neutral = 1×
@@ -62,11 +75,15 @@ function pickNext() {
 function drawCard(animate = false) {
   const q = pickNext();
   current = q;
-  ui.updateProgress(pool, seen);
+  ui.updateProgress(pool, seen, activeDeck);
   ui.syncUndoBtn(seen.length > 0);
 
   if (!q) {
-    ui.renderEmpty(pool.length, restartPool);
+    if (activeDeck) {
+      ui.renderDeckComplete(activeDeck.label, restartPool, exitDeck);
+    } else {
+      ui.renderEmpty(pool.length, restartPool);
+    }
     return;
   }
 
@@ -79,6 +96,29 @@ function restartPool() {
   drawCard(true);
 }
 
+function startDeck(id) {
+  const d = DECKS.find(d => d.id === id);
+  if (!d) return;
+  activeDeck = d;
+  seen = [];
+  saveSeen(seen);
+  history.replaceState(null, '', '#deck=' + id);
+  ui.syncDeckMode(activeDeck);
+  ui.closeSheet();
+  if (currentView === 'cards') drawCard(true);
+  else navigateTo('cards');
+}
+
+function exitDeck() {
+  activeDeck = null;
+  seen = [];
+  saveSeen(seen);
+  history.replaceState(null, '', location.pathname);
+  ui.syncDeckMode(null);
+  buildPool();
+  if (currentView === 'cards') drawCard(true);
+}
+
 /* ── Card actions ───────────────────────────── */
 function doUndo() {
   if (!seen.length) return;
@@ -86,7 +126,7 @@ function doUndo() {
   const prevQ  = questions.find(q => q.id === prevId);
   if (!prevQ) return;
   saveSeen(seen);
-  ui.updateProgress(pool, seen);
+  ui.updateProgress(pool, seen, activeDeck);
   ui.syncUndoBtn(seen.length > 0);
   const show = () => {
     current = prevQ;
@@ -187,6 +227,7 @@ function enterApp() {
   buildPool();
   ui.updateFilterBadge(filters);
   ui.updateSavedChip(favorites.length);
+  ui.syncDeckMode(activeDeck);
   ui.els.setupView.classList.remove('active');
   navigateTo('cards');
   drawCard(true);
@@ -217,6 +258,7 @@ function exportSaved() {
 
 /* ── Surprise me ────────────────────────────── */
 function surpriseMe() {
+  if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
   const depthOptions = [
     [1,2,3],[1,2,3],[1,2,3],
     [1,2],
@@ -421,6 +463,7 @@ function wireEvents() {
     if (!btn) return;
     const preset = FILTER_PRESETS.find(p => p.id === btn.dataset.preset);
     if (!preset) return;
+    if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
     filters = { depths: [...preset.depths], categories: [...preset.categories], setting: preset.setting, types: [...preset.types] };
     saveFilters(filters);
     buildPool();
@@ -430,7 +473,16 @@ function wireEvents() {
     if (currentView === 'cards') drawCard(true);
   });
 
+  document.getElementById('deck-grid').addEventListener('click', e => {
+    const btn = e.target.closest('.deck-card');
+    if (!btn) return;
+    startDeck(btn.dataset.deck);
+  });
+
+  document.getElementById('btn-exit-deck').addEventListener('click', exitDeck);
+
   ui.els.btnApply.addEventListener('click', () => {
+    if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
     const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
     const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
     const types      = [...document.querySelectorAll('#chips-type     .chip.active')].map(c => c.dataset.val);

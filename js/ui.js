@@ -44,6 +44,9 @@ export const els = {
   btnDoUpd:     document.getElementById('btn-do-update'),
   updateStatus: document.getElementById('update-status'),
   themeSeg:     document.getElementById('settings-theme-seg'),
+  deckBanner:   document.getElementById('deck-banner'),
+  deckBannerLbl:document.getElementById('deck-banner-label'),
+  deckGrid:     document.getElementById('deck-grid'),
 };
 
 /* ── Theme ──────────────────────────────────── */
@@ -99,15 +102,22 @@ export function updateSavedChip(n) {
 }
 
 /* ── Progress bar ───────────────────────────── */
-export function updateProgress(pool, seen) {
+export function updateProgress(pool, seen, deck = null) {
+  if (deck) {
+    const total      = deck.ids.length;
+    const seenInDeck = seen.filter(id => deck.ids.includes(id)).length;
+    const pct        = total > 0 ? Math.round((seenInDeck / total) * 100) : 0;
+    els.poolInfo.textContent = `${seenInDeck} of ${total}`;
+    els.progressFill.style.width = pct + '%';
+    els.progressTrack.setAttribute('aria-valuenow', pct);
+    return;
+  }
   const unseen = pool.filter(q => !seen.includes(q.id));
   const total  = pool.length;
   const pct    = total > 0 ? Math.round((unseen.length / total) * 100) : 0;
-
   els.poolInfo.textContent = total > 0
     ? `${unseen.length} of ${total} remaining`
     : 'No questions match filters';
-
   els.progressFill.style.width = pct + '%';
   els.progressTrack.setAttribute('aria-valuenow', pct);
 }
@@ -357,6 +367,43 @@ export function syncSaveBtn(isSaved) {
 
 export function syncUndoBtn(visible) {
   els.btnUndo.style.display = visible ? '' : 'none';
+}
+
+export function syncDeckMode(deck) {
+  const active = !!deck;
+  els.deckBanner.style.display = active ? '' : 'none';
+  els.btnFilter.style.display  = active ? 'none' : '';
+  if (active) els.deckBannerLbl.textContent = deck.label;
+  // highlight active deck card in filter sheet
+  document.querySelectorAll('.deck-card').forEach(c =>
+    c.classList.toggle('is-active', c.dataset.deck === deck?.id));
+}
+
+export function renderDeckComplete(label, onRestart, onExit) {
+  els.cardArea.innerHTML = `
+    <div class="empty-state" role="status">
+      <svg class="empty-state__icon" xmlns="http://www.w3.org/2000/svg"
+           width="64" height="64" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p class="empty-state__headline">${label} complete</p>
+      <p class="empty-state__body">You've been through all the cards in this deck.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-outlined" id="btn-deck-exit" style="min-width:120px">Free play</button>
+        <button class="btn-filled"   id="btn-deck-restart" style="min-width:120px">
+          Go again
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+  els.cardActions.style.display = 'none';
+  document.getElementById('btn-deck-restart').addEventListener('click', onRestart);
+  document.getElementById('btn-deck-exit').addEventListener('click', onExit);
 }
 
 export function syncRatingBtns(value) {
