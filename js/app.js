@@ -4,6 +4,7 @@ import {
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS, FILTER_PRESETS,
   loadFilters, saveFilters, loadFavs, saveFavs,
   loadNotes, saveNotes, loadSeen, saveSeen,
+  loadRatings, saveRatings,
 } from './store.js';
 import * as ui from './ui.js';
 
@@ -12,6 +13,7 @@ let filters     = loadFilters();
 let favorites   = loadFavs();
 let notes       = loadNotes();
 let seen        = loadSeen();
+let ratings     = loadRatings();
 let pool        = [];
 let current     = null;
 let currentView = 'cards';
@@ -41,9 +43,19 @@ function buildPool() {
 
 function pickNext() {
   const unseen = pool.filter(q => !seen.includes(q.id));
-  return unseen.length
-    ? unseen[Math.floor(Math.random() * unseen.length)]
-    : null;
+  if (!unseen.length) return null;
+  // Weighted sampling: liked = 3×, disliked = 0.3×, neutral = 1×
+  const weights = unseen.map(q => {
+    const r = ratings[q.id];
+    return r === 1 ? 3 : r === -1 ? 0.3 : 1;
+  });
+  const total = weights.reduce((s, w) => s + w, 0);
+  let rand = Math.random() * total;
+  for (let i = 0; i < unseen.length; i++) {
+    rand -= weights[i];
+    if (rand <= 0) return unseen[i];
+  }
+  return unseen[unseen.length - 1];
 }
 
 /* ── Card draw ──────────────────────────────── */
@@ -58,7 +70,7 @@ function drawCard(animate = false) {
     return;
   }
 
-  ui.drawCard(q, favorites.includes(q.id), animate, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null });
+  ui.drawCard(q, favorites.includes(q.id), animate, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null, onRate: doRate, rating: ratings[q.id] ?? 0 });
 }
 
 function restartPool() {
@@ -78,7 +90,7 @@ function doUndo() {
   ui.syncUndoBtn(seen.length > 0);
   const show = () => {
     current = prevQ;
-    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null });
+    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null, onRate: doRate, rating: ratings[prevQ.id] ?? 0 });
   };
   const card = ui.els.cardArea.querySelector('.card');
   card ? ui.exitCard(card, 'right', show) : show();
@@ -109,6 +121,18 @@ function doSave() {
   saveSeen(seen);
   const card = ui.els.cardArea.querySelector('.card');
   card ? ui.exitCard(card, 'left', () => drawCard(true)) : drawCard(true);
+}
+
+function doRate(value) {
+  if (!current) return;
+  const id = current.id;
+  if (ratings[id] === value) {
+    delete ratings[id];
+  } else {
+    ratings[id] = value;
+  }
+  saveRatings(ratings);
+  ui.syncRatingBtns(ratings[id] ?? 0);
 }
 
 /* ── Navigation ─────────────────────────────── */
