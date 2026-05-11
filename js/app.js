@@ -105,6 +105,7 @@ function startDeck(id) {
   history.replaceState(null, '', '#deck=' + id);
   ui.syncDeckMode(activeDeck);
   ui.closeSheet();
+  ui.closeDeckSheet();
   if (currentView === 'cards') drawCard(true);
   else navigateTo('cards');
 }
@@ -396,6 +397,7 @@ function wireEvents() {
     if (document.getElementById('note-dialog').classList.contains('open')) ui.closeNoteDialog();
     if (ui.els.resetDialog.classList.contains('open')) ui.closeDialog();
     if (ui.els.filterSheet.classList.contains('open')) ui.closeSheet();
+    if (ui.els.deckSheet.classList.contains('open')) ui.closeDeckSheet();
   });
 
   ui.els.savedChip.addEventListener('click', () => navigateTo('favorites'));
@@ -434,6 +436,8 @@ function wireEvents() {
 
   ui.els.btnFilter.addEventListener('click', ui.openSheet);
   ui.els.scrim.addEventListener('click', ui.closeSheet);
+  ui.els.btnDecks.addEventListener('click', ui.openDeckSheet);
+  ui.els.deckScrim.addEventListener('click', ui.closeDeckSheet);
 
   document.getElementById('chips-depth').addEventListener('click', e => {
     const c = e.target.closest('.chip'); if (c) c.classList.toggle('active');
