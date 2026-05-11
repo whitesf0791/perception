@@ -44,8 +44,10 @@ export const els = {
   btnDoUpd:     document.getElementById('btn-do-update'),
   updateStatus: document.getElementById('update-status'),
   themeSeg:     document.getElementById('settings-theme-seg'),
-  deckBanner:   document.getElementById('deck-banner'),
-  deckBannerLbl:document.getElementById('deck-banner-label'),
+  deckSheet:    document.getElementById('deck-sheet'),
+  deckScrim:    document.getElementById('deck-scrim'),
+  btnDecks:     document.getElementById('btn-decks'),
+  btnExitDeck:  document.getElementById('btn-exit-deck'),
   deckGrid:     document.getElementById('deck-grid'),
 };
 
@@ -61,7 +63,7 @@ export function setTheme(mode) {
   document.documentElement.classList.toggle('light', isLight);
   localStorage.setItem(STORAGE_THEME, mode);
   document.querySelector('meta[name="theme-color"]')
-    .setAttribute('content', isLight ? '#FFFBFE' : '#1C1B1F');
+    .setAttribute('content', isLight ? '#FFF8F2' : '#1A1612');
   document.querySelectorAll('#settings-theme-seg .seg-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.theme === mode));
 }
@@ -107,7 +109,7 @@ export function updateProgress(pool, seen, deck = null) {
     const total      = deck.ids.length;
     const seenInDeck = seen.filter(id => deck.ids.includes(id)).length;
     const pct        = total > 0 ? Math.round((seenInDeck / total) * 100) : 0;
-    els.poolInfo.textContent = `${seenInDeck} of ${total}`;
+    els.poolInfo.textContent = `${deck.label} · ${seenInDeck} of ${total}`;
     els.progressFill.style.width = pct + '%';
     els.progressTrack.setAttribute('aria-valuenow', pct);
     return;
@@ -136,7 +138,8 @@ export function showView(name, savedCount) {
   els.navSettings.setAttribute('aria-current', name === 'settings' ? 'page' : 'false');
 
   els.btnFilter.style.display = name === 'cards' ? '' : 'none';
-  els.viewTitle.textContent   = name === 'cards'     ? 'Conversation Cards'
+  els.btnDecks.style.display  = name === 'cards' ? '' : 'none';
+  els.viewTitle.textContent   = name === 'cards'     ? 'Cards'
                                : name === 'favorites' ? 'Saved'
                                : 'Settings';
   updateSavedChip(savedCount);
@@ -268,8 +271,6 @@ export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount
 
 /* ── Card rendering ─────────────────────────── */
 export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, rating = 0 }) {
-  const catLabel = q.category.replace(/_/g, ' ');
-
   const card = document.createElement('div');
   card.className = 'card' + (animate ? ' enter' : '');
   card.setAttribute('role', 'article');
@@ -279,7 +280,6 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
         <span class="depth-pill__dot" aria-hidden="true"></span>
         ${DEPTH_LABELS[q.depth]}
       </div>
-      <span class="card__category">${catLabel}</span>
     </div>
     <p class="card__question">${q.question}</p>
     <div class="card__footer">
@@ -321,8 +321,7 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
     </div>
     <div class="swipe-label right" aria-hidden="true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5"/>
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>
       </svg>
       Back
     </div>
@@ -332,7 +331,7 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
   els.cardArea.appendChild(card);
   els.cardActions.style.display = '';
   syncSaveBtn(isSaved);
-  setupCardInteraction(card, handlers);
+  setupCardInteraction(card, { onNext, onSave, onUndo, onRate });
 }
 
 export function renderEmpty(poolSize, onRestart) {
@@ -371,10 +370,9 @@ export function syncUndoBtn(visible) {
 
 export function syncDeckMode(deck) {
   const active = !!deck;
-  els.deckBanner.style.display = active ? '' : 'none';
-  els.btnFilter.style.display  = active ? 'none' : '';
-  if (active) els.deckBannerLbl.textContent = deck.label;
-  // highlight active deck card in filter sheet
+  els.btnExitDeck.style.display = active ? '' : 'none';
+  els.btnFilter.style.display   = active ? 'none' : '';
+  els.btnDecks.style.display    = active ? 'none' : '';
   document.querySelectorAll('.deck-card').forEach(c =>
     c.classList.toggle('is-active', c.dataset.deck === deck?.id));
 }
@@ -482,6 +480,19 @@ export function exitCard(card, direction, callback) {
   card.style.transform = '';
   card.classList.add(direction === 'left' ? 'exit-left' : 'exit-right');
   setTimeout(callback, 280);
+}
+
+/* ── Deck sheet ─────────────────────────────── */
+export function openDeckSheet() {
+  els.deckSheet.classList.add('open');
+  els.deckScrim.classList.add('open');
+  els.deckScrim.removeAttribute('aria-hidden');
+}
+
+export function closeDeckSheet() {
+  els.deckSheet.classList.remove('open');
+  els.deckScrim.classList.remove('open');
+  els.deckScrim.setAttribute('aria-hidden', 'true');
 }
 
 /* ── Filter sheet ───────────────────────────── */
