@@ -1738,3 +1738,47 @@ html.light .theme-icon--moon { display: none; }
   height: 40px;
   flex: none;
 }
+
+/* Filter presets */
+.filter-section--presets { padding-bottom: 4px; }
+.preset-group {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.preset-group::-webkit-scrollbar { display: none; }
+.preset-pill {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 16px;
+  border: 1.5px solid var(--md-outline-variant);
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms, border-color 120ms, color 120ms;
+  -webkit-touch-callout: none;
+  user-select: none;
+  position: relative;
+}
+.preset-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--md-on-surface);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.preset-pill:hover::before  { opacity: 0.08; }
+.preset-pill:active::before { opacity: 0.14; }
+.preset-pill:focus-visible  { outline: 2px solid var(--md-primary); outline-offset: 2px; }

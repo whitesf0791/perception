@@ -291,10 +291,11 @@ export function drawCard(q, isSaved, animate, handlers) {
       Save
     </div>
     <div class="swipe-label right" aria-hidden="true">
-      Next
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" d="M13 7l5 5-5 5M6 12h12"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
       </svg>
+      Back
     </div>
   `;
 
@@ -340,12 +341,17 @@ export function syncUndoBtn(visible) {
 }
 
 /* ── Card gestures ──────────────────────────── */
-export function setupCardInteraction(card, { onNext, onSave }) {
+export function setupCardInteraction(card, { onNext, onSave, onUndo }) {
   const THRESHOLD  = 65;
   const LONG_PRESS = 480;
   const leftLabel  = card.querySelector('.swipe-label.left');
   const rightLabel = card.querySelector('.swipe-label.right');
   let startX = 0, startY = 0, dragging = false, moved = false, longTimer = null;
+
+  function reset() {
+    card.style.transform = '';
+    leftLabel.style.opacity = rightLabel.style.opacity = 0;
+  }
 
   function start(x, y) {
     startX = x; startY = y; dragging = true; moved = false;
@@ -360,7 +366,7 @@ export function setupCardInteraction(card, { onNext, onSave }) {
       card.style.transform = `translateX(${dx * 0.38}px) rotate(${dx * 0.025}deg)`;
       const p = Math.min(1, Math.abs(dx) / THRESHOLD);
       leftLabel.style.opacity  = dx < 0 ? p : 0;
-      rightLabel.style.opacity = dx > 0 ? p : 0;
+      rightLabel.style.opacity = dx > 0 && onUndo ? p : 0;
     }
   }
 
@@ -369,14 +375,18 @@ export function setupCardInteraction(card, { onNext, onSave }) {
     dragging = false; clearTimeout(longTimer);
     const dx = x - startX;
     if (Math.abs(dx) > THRESHOLD) {
-      dx < 0 ? exitCard(card, 'left', onSave) : exitCard(card, 'right', onNext);
+      if (dx < 0) {
+        exitCard(card, 'left', onSave);
+      } else if (onUndo) {
+        exitCard(card, 'right', onUndo);
+      } else {
+        reset();
+      }
     } else if (!moved) {
-      card.style.transform = '';
-      leftLabel.style.opacity = rightLabel.style.opacity = 0;
+      reset();
       onNext();
     } else {
-      card.style.transform = '';
-      leftLabel.style.opacity = rightLabel.style.opacity = 0;
+      reset();
     }
   }
 

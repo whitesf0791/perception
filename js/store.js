@@ -4,7 +4,7 @@ export const STORAGE_SETUP   = 'conv_card_setup_done';
 export const STORAGE_THEME   = 'conv_card_theme';
 export const STORAGE_NOTES   = 'conv_card_notes';
 export const STORAGE_SEEN    = 'conv_card_seen';
-export const APP_VERSION     = '1.3.4';
+export const APP_VERSION     = '1.3.5';
 
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
@@ -21,6 +21,41 @@ export const DEFAULT_FILTERS = {
   types:   [...ALL_TYPES],
 };
 export const DEPTH_LABELS = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
+
+export const FILTER_PRESETS = [
+  {
+    id: 'first-date',
+    label: 'First date',
+    depths: [1, 2],
+    categories: [...ALL_CATEGORIES],
+    setting: 'any',
+    types: [...ALL_TYPES],
+  },
+  {
+    id: 'work-team',
+    label: 'Work team',
+    depths: [1, 2],
+    categories: ALL_CATEGORIES.filter(c => c !== 'relationships'),
+    setting: 'group',
+    types: [...ALL_TYPES],
+  },
+  {
+    id: 'old-friends',
+    label: 'Old friends',
+    depths: [1, 2, 3],
+    categories: [...ALL_CATEGORIES],
+    setting: 'any',
+    types: [...ALL_TYPES],
+  },
+  {
+    id: 'deep-dive',
+    label: 'Deep dive',
+    depths: [2, 3],
+    categories: [...ALL_CATEGORIES],
+    setting: 'one_on_one',
+    types: [...ALL_TYPES],
+  },
+];
 
 export function loadFilters() {
   try {

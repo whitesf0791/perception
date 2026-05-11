@@ -1,7 +1,7 @@
 import { questions } from '../data/questions.js';
 import {
   STORAGE_SETUP, APP_VERSION,
-  ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS,
+  ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS, FILTER_PRESETS,
   loadFilters, saveFilters, loadFavs, saveFavs,
   loadNotes, saveNotes, loadSeen, saveSeen,
 } from './store.js';
@@ -58,7 +58,7 @@ function drawCard(animate = false) {
     return;
   }
 
-  ui.drawCard(q, favorites.includes(q.id), animate, { onNext: doNext, onSave: doSave });
+  ui.drawCard(q, favorites.includes(q.id), animate, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null });
 }
 
 function restartPool() {
@@ -78,7 +78,7 @@ function doUndo() {
   ui.syncUndoBtn(seen.length > 0);
   const show = () => {
     current = prevQ;
-    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave });
+    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null });
   };
   const card = ui.els.cardArea.querySelector('.card');
   card ? ui.exitCard(card, 'right', show) : show();
@@ -391,6 +391,20 @@ function wireEvents() {
   });
 
   ui.els.btnSurprise.addEventListener('click', surpriseMe);
+
+  document.getElementById('preset-group').addEventListener('click', e => {
+    const btn = e.target.closest('.preset-pill');
+    if (!btn) return;
+    const preset = FILTER_PRESETS.find(p => p.id === btn.dataset.preset);
+    if (!preset) return;
+    filters = { depths: [...preset.depths], categories: [...preset.categories], setting: preset.setting, types: [...preset.types] };
+    saveFilters(filters);
+    buildPool();
+    ui.updateFilterBadge(filters);
+    ui.applyFiltersToChips(filters);
+    ui.closeSheet();
+    if (currentView === 'cards') drawCard(true);
+  });
 
   ui.els.btnApply.addEventListener('click', () => {
     const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
