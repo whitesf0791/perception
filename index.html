@@ -157,6 +157,19 @@
       </button>
     </div>
 
+    <div class="deck-banner" id="deck-banner" style="display:none" aria-live="polite">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"
+           class="deck-banner__icon">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="deck-banner__label" id="deck-banner-label"></span>
+      <button class="deck-banner__exit" id="btn-exit-deck" aria-label="Exit deck">Exit</button>
+    </div>
+
     <div class="card-area" id="card-area">
       <!-- Card injected by JS -->
     </div>
@@ -388,6 +401,32 @@
 
   <div class="sheet__scroll">
     <p class="sheet__title">Filters</p>
+
+    <div class="filter-section">
+      <p class="filter-section__label">Curated decks</p>
+      <div class="deck-grid" id="deck-grid" role="group" aria-label="Curated decks">
+        <button class="deck-card" data-deck="first-date">
+          <span class="deck-card__name">First Date</span>
+          <span class="deck-card__desc">Playful openers that build toward something real.</span>
+          <span class="deck-card__count">12 cards</span>
+        </button>
+        <button class="deck-card" data-deck="work-team">
+          <span class="deck-card__name">Work Team</span>
+          <span class="deck-card__desc">Get to know colleagues beyond the job title.</span>
+          <span class="deck-card__count">12 cards</span>
+        </button>
+        <button class="deck-card" data-deck="old-friends">
+          <span class="deck-card__name">Old Friends</span>
+          <span class="deck-card__desc">Nostalgia and the stuff you never got around to saying.</span>
+          <span class="deck-card__count">15 cards</span>
+        </button>
+        <button class="deck-card" data-deck="deep-dive">
+          <span class="deck-card__name">Deep Dive</span>
+          <span class="deck-card__desc">For two people ready to be genuinely honest.</span>
+          <span class="deck-card__count">12 cards</span>
+        </button>
+      </div>
+    </div>
 
     <div class="filter-section filter-section--presets">
       <p class="filter-section__label">Quick start</p>
