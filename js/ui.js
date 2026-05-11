@@ -257,7 +257,7 @@ export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount
 }
 
 /* ── Card rendering ─────────────────────────── */
-export function drawCard(q, isSaved, animate, handlers) {
+export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, rating = 0 }) {
   const catLabel = q.category.replace(/_/g, ' ');
 
   const card = document.createElement('div');
@@ -273,7 +273,26 @@ export function drawCard(q, isSaved, animate, handlers) {
     </div>
     <p class="card__question">${q.question}</p>
     <div class="card__footer">
-      <span class="card__hint" aria-hidden="true">tap to advance · swipe to save</span>
+      <div class="card__rating" role="group" aria-label="Rate this question">
+        <button class="rating-btn rating-btn--down${rating === -1 ? ' is-active' : ''}"
+                aria-label="Less of this" aria-pressed="${rating === -1}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/>
+          </svg>
+        </button>
+        <button class="rating-btn rating-btn--up${rating === 1 ? ' is-active' : ''}"
+                aria-label="More of this" aria-pressed="${rating === 1}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
+          </svg>
+        </button>
+      </div>
       <span class="card__saved-icon${isSaved ? ' is-saved' : ''}"
             aria-label="${isSaved ? 'Saved' : ''}" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -340,20 +359,33 @@ export function syncUndoBtn(visible) {
   els.btnUndo.style.display = visible ? '' : 'none';
 }
 
+export function syncRatingBtns(value) {
+  const card = els.cardArea.querySelector('.card');
+  if (!card) return;
+  const up   = card.querySelector('.rating-btn--up');
+  const down = card.querySelector('.rating-btn--down');
+  if (up)   { up.classList.toggle('is-active',   value === 1);  up.setAttribute('aria-pressed',   String(value === 1)); }
+  if (down) { down.classList.toggle('is-active', value === -1); down.setAttribute('aria-pressed', String(value === -1)); }
+}
+
 /* ── Card gestures ──────────────────────────── */
-export function setupCardInteraction(card, { onNext, onSave, onUndo }) {
+export function setupCardInteraction(card, { onNext, onSave, onUndo, onRate }) {
   const THRESHOLD  = 65;
   const LONG_PRESS = 480;
   const leftLabel  = card.querySelector('.swipe-label.left');
   const rightLabel = card.querySelector('.swipe-label.right');
   let startX = 0, startY = 0, dragging = false, moved = false, longTimer = null;
 
+  card.querySelector('.rating-btn--up').addEventListener('click',   () => onRate(1));
+  card.querySelector('.rating-btn--down').addEventListener('click', () => onRate(-1));
+
   function reset() {
     card.style.transform = '';
     leftLabel.style.opacity = rightLabel.style.opacity = 0;
   }
 
-  function start(x, y) {
+  function start(x, y, target) {
+    if (target?.closest('.rating-btn')) return;
     startX = x; startY = y; dragging = true; moved = false;
     longTimer = setTimeout(() => { if (!moved) onSave(); }, LONG_PRESS);
   }
@@ -390,11 +422,11 @@ export function setupCardInteraction(card, { onNext, onSave, onUndo }) {
     }
   }
 
-  card.addEventListener('mousedown',  e => start(e.clientX, e.clientY));
+  card.addEventListener('mousedown',  e => start(e.clientX, e.clientY, e.target));
   card.addEventListener('mousemove',  e => { if (dragging) move(e.clientX, e.clientY); });
   card.addEventListener('mouseup',    e => end(e.clientX));
   card.addEventListener('mouseleave', e => { if (dragging) end(e.clientX); });
-  card.addEventListener('touchstart', e => { const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
+  card.addEventListener('touchstart', e => { const t = e.touches[0]; start(t.clientX, t.clientY, e.target); }, { passive: true });
   card.addEventListener('touchmove',  e => { const t = e.touches[0]; move(t.clientX, t.clientY); },  { passive: true });
   card.addEventListener('touchend',   e => { const t = e.changedTouches[0]; end(t.clientX); });
 }

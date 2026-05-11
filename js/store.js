@@ -4,7 +4,8 @@ export const STORAGE_SETUP   = 'conv_card_setup_done';
 export const STORAGE_THEME   = 'conv_card_theme';
 export const STORAGE_NOTES   = 'conv_card_notes';
 export const STORAGE_SEEN    = 'conv_card_seen';
-export const APP_VERSION     = '1.3.5';
+export const STORAGE_RATINGS = 'conv_card_ratings';
+export const APP_VERSION     = '1.3.6';
 
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
@@ -102,4 +103,13 @@ export function loadSeen() {
 
 export function saveSeen(seen) {
   localStorage.setItem(STORAGE_SEEN, JSON.stringify(seen));
+}
+
+export function loadRatings() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_RATINGS)) || {}; }
+  catch(e) { return {}; }
+}
+
+export function saveRatings(ratings) {
+  localStorage.setItem(STORAGE_RATINGS, JSON.stringify(ratings));
 }
