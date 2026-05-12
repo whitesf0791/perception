@@ -314,16 +314,16 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
       </span>
     </div>
     <div class="swipe-label left" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-      </svg>
-      Save
-    </div>
-    <div class="swipe-label right" aria-hidden="true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>
       </svg>
       Back
+    </div>
+    <div class="swipe-label right" aria-hidden="true">
+      Next
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
+      </svg>
     </div>
   `;
 
@@ -416,7 +416,6 @@ export function syncRatingBtns(value) {
 /* ── Card gestures ──────────────────────────── */
 export function setupCardInteraction(card, { onNext, onSave, onUndo, onRate }) {
   const THRESHOLD  = 65;
-  const LONG_PRESS = 480;
   const leftLabel  = card.querySelector('.swipe-label.left');
   const rightLabel = card.querySelector('.swipe-label.right');
   let startX = 0, startY = 0, dragging = false, moved = false, longTimer = null;
@@ -432,30 +431,29 @@ export function setupCardInteraction(card, { onNext, onSave, onUndo, onRate }) {
   function start(x, y, target) {
     if (target?.closest('.rating-btn')) return;
     startX = x; startY = y; dragging = true; moved = false;
-    longTimer = setTimeout(() => { if (!moved) onSave(); }, LONG_PRESS);
   }
 
   function move(x, y) {
     if (!dragging) return;
     const dx = x - startX, dy = Math.abs(y - startY);
-    if (Math.abs(dx) > 6 || dy > 6) { moved = true; clearTimeout(longTimer); }
+    if (Math.abs(dx) > 6 || dy > 6) { moved = true; }
     if (Math.abs(dx) > 8) {
       card.style.transform = `translateX(${dx * 0.38}px) rotate(${dx * 0.025}deg)`;
       const p = Math.min(1, Math.abs(dx) / THRESHOLD);
-      leftLabel.style.opacity  = dx < 0 ? p : 0;
-      rightLabel.style.opacity = dx > 0 && onUndo ? p : 0;
+      leftLabel.style.opacity  = dx < 0 && onUndo ? p : 0;
+      rightLabel.style.opacity = dx > 0 ? p : 0;
     }
   }
 
   function end(x) {
     if (!dragging) return;
-    dragging = false; clearTimeout(longTimer);
+    dragging = false;
     const dx = x - startX;
     if (Math.abs(dx) > THRESHOLD) {
-      if (dx < 0) {
-        exitCard(card, 'left', onSave);
+      if (dx > 0) {
+        exitCard(card, 'right', onNext);
       } else if (onUndo) {
-        exitCard(card, 'right', onUndo);
+        exitCard(card, 'left', onUndo);
       } else {
         reset();
       }
