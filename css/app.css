@@ -414,8 +414,8 @@ html, body {
 
 .swipe-label.left {
   left: 20px;
-  background: var(--md-tertiary-container);
-  color: var(--md-tertiary);
+  background: var(--md-secondary-container);
+  color: var(--md-secondary);
 }
 
 .swipe-label.right {
