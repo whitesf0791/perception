@@ -5,7 +5,7 @@ export const STORAGE_THEME   = 'conv_card_theme';
 export const STORAGE_NOTES   = 'conv_card_notes';
 export const STORAGE_SEEN    = 'conv_card_seen';
 export const STORAGE_RATINGS = 'conv_card_ratings';
-export const APP_VERSION     = '1.3.9';
+export const APP_VERSION     = '1.4.0';
 
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
