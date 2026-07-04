@@ -1,7 +1,7 @@
 import { questions } from '../data/questions.js';
 import { DECKS }     from '../data/decks.js';
 import {
-  STORAGE_SETUP, APP_VERSION,
+  STORAGE_SETUP, APP_VERSION, DEPTH_LABELS,
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS, FILTER_PRESETS,
   loadFilters, saveFilters, loadFavs, saveFavs,
   loadNotes, saveNotes, loadSeen, saveSeen,
@@ -10,6 +10,8 @@ import {
 import * as ui from './ui.js';
 
 /* ── State ──────────────────────────────────── */
+const questionById = new Map(questions.map(q => [q.id, q]));
+
 let filters     = loadFilters();
 let favorites   = loadFavs();
 let notes       = loadNotes();
@@ -49,13 +51,14 @@ function buildPool() {
 }
 
 function pickNext() {
+  const seenSet = new Set(seen);
   if (activeDeck) {
     return activeDeck.ids
-      .map(id => questions.find(q => q.id === id))
+      .map(id => questionById.get(id))
       .filter(Boolean)
-      .find(q => !seen.includes(q.id)) || null;
+      .find(q => !seenSet.has(q.id)) || null;
   }
-  const unseen = pool.filter(q => !seen.includes(q.id));
+  const unseen = pool.filter(q => !seenSet.has(q.id));
   if (!unseen.length) return null;
   // Weighted sampling: liked = 3×, disliked = 0.3×, neutral = 1×
   const weights = unseen.map(q => {
@@ -72,6 +75,16 @@ function pickNext() {
 }
 
 /* ── Card draw ──────────────────────────────── */
+function cardHandlers(q) {
+  return {
+    onNext: doNext,
+    onSave: doSave,
+    onUndo: seen.length > 0 ? doUndo : null,
+    onRate: doRate,
+    rating: ratings[q.id] ?? 0,
+  };
+}
+
 function drawCard(animate = false) {
   const q = pickNext();
   current = q;
@@ -87,7 +100,17 @@ function drawCard(animate = false) {
     return;
   }
 
-  ui.drawCard(q, favorites.includes(q.id), animate, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null, onRate: doRate, rating: ratings[q.id] ?? 0 });
+  ui.drawCard(q, favorites.includes(q.id), animate, cardHandlers(q));
+}
+
+/* Animate the current card off screen, unless a swipe gesture already did. */
+function animateOut(direction, after) {
+  const card = ui.els.cardArea.querySelector('.card');
+  if (!card || card.classList.contains('exit-left') || card.classList.contains('exit-right')) {
+    after();
+  } else {
+    ui.exitCard(card, direction, after);
+  }
 }
 
 function restartPool() {
@@ -96,6 +119,7 @@ function restartPool() {
   drawCard(true);
 }
 
+/* ── Deck mode ──────────────────────────────── */
 function startDeck(id) {
   const d = DECKS.find(d => d.id === id);
   if (!d) return;
@@ -120,29 +144,34 @@ function exitDeck() {
   if (currentView === 'cards') drawCard(true);
 }
 
+/* Leave deck mode without resetting history — used when filters take over. */
+function clearDeckMode() {
+  if (!activeDeck) return;
+  activeDeck = null;
+  ui.syncDeckMode(null);
+  history.replaceState(null, '', location.pathname);
+}
+
 /* ── Card actions ───────────────────────────── */
 function doUndo() {
   if (!seen.length) return;
-  const prevId = seen.pop();
-  const prevQ  = questions.find(q => q.id === prevId);
+  const prevQ = questionById.get(seen[seen.length - 1]);
   if (!prevQ) return;
+  seen.pop();
   saveSeen(seen);
   ui.updateProgress(pool, seen, activeDeck);
   ui.syncUndoBtn(seen.length > 0);
-  const show = () => {
+  animateOut('left', () => {
     current = prevQ;
-    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, { onNext: doNext, onSave: doSave, onUndo: seen.length > 0 ? doUndo : null, onRate: doRate, rating: ratings[prevQ.id] ?? 0 });
-  };
-  const card = ui.els.cardArea.querySelector('.card');
-  card ? ui.exitCard(card, 'right', show) : show();
+    ui.drawCard(prevQ, favorites.includes(prevQ.id), true, cardHandlers(prevQ));
+  });
 }
 
 function doNext() {
   if (!current) return;
   seen.push(current.id);
   saveSeen(seen);
-  const card = ui.els.cardArea.querySelector('.card');
-  card ? ui.exitCard(card, 'right', () => drawCard(true)) : drawCard(true);
+  animateOut('right', () => drawCard(true));
 }
 
 function doSave() {
@@ -151,17 +180,13 @@ function doSave() {
   if (!favorites.includes(id)) {
     favorites.push(id);
     saveFavs(favorites);
-    const si  = ui.els.cardArea.querySelector('.card__saved-icon');
-    const svg = si?.querySelector('svg');
-    if (si)  si.classList.add('is-saved');
-    if (svg) svg.setAttribute('fill', 'currentColor');
+    ui.syncSavedIcon(true);
     ui.syncSaveBtn(true);
     ui.updateSavedChip(favorites.length);
   }
   seen.push(id);
   saveSeen(seen);
-  const card = ui.els.cardArea.querySelector('.card');
-  card ? ui.exitCard(card, 'left', () => drawCard(true)) : drawCard(true);
+  animateOut('right', () => drawCard(true));
 }
 
 function doRate(value) {
@@ -185,7 +210,7 @@ function navigateTo(name) {
 }
 
 function getFavQs() {
-  return favorites.map(id => questions.find(q => q.id === id)).filter(Boolean);
+  return favorites.map(id => questionById.get(id)).filter(Boolean);
 }
 
 function removeFav(id) {
@@ -196,7 +221,7 @@ function removeFav(id) {
 }
 
 function openNoteDialog(id) {
-  const q = questions.find(q => q.id === id);
+  const q = questionById.get(id);
   ui.openNoteDialog(id, notes[id] || '', q?.question || '', (text) => {
     if (text.trim()) {
       notes[id] = text.trim();
@@ -205,6 +230,46 @@ function openNoteDialog(id) {
     }
     saveNotes(notes);
     ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
+  });
+}
+
+/* ── Filters ────────────────────────────────── */
+/* Adopt a new filter set: persist, rebuild, sync UI, redraw. */
+function applyNewFilters(next) {
+  clearDeckMode();
+  filters = next;
+  saveFilters(filters);
+  buildPool();
+  ui.updateFilterBadge(filters);
+  ui.applyFiltersToChips(filters);
+  ui.closeSheet();
+  if (currentView === 'cards') drawCard(true);
+}
+
+function surpriseMe() {
+  const depthOptions = [
+    [1,2,3],[1,2,3],[1,2,3],
+    [1,2],
+    [2,3],
+    [2],
+  ];
+  const depths = depthOptions[Math.floor(Math.random() * depthOptions.length)];
+  const shuffled = [...ALL_CATEGORIES].sort(() => Math.random() - 0.5);
+  const categories = shuffled.slice(0, 3 + Math.round(Math.random()));
+  applyNewFilters({ categories, depths, setting: filters.setting, types: [...ALL_TYPES] });
+}
+
+function applyFiltersFromSheet() {
+  const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
+  const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
+  const types      = [...document.querySelectorAll('#chips-type     .chip.active')].map(c => c.dataset.val);
+  const setting    = document.querySelector('#chips-setting .seg-btn.active')?.dataset.val || 'any';
+
+  applyNewFilters({
+    depths:     depths.length     ? depths     : [1, 2, 3],
+    categories: categories.length ? categories : [...ALL_CATEGORIES],
+    types:      types.length      ? types      : [...ALL_TYPES],
+    setting,
   });
 }
 
@@ -239,12 +304,11 @@ function exportSaved() {
   const favQs = getFavQs();
   if (!favQs.length) return;
 
-  const depthLabel = { 1: 'Light', 2: 'Moderate', 3: 'Deep' };
   const categoryLabel = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   const lines = favQs.map((q, i) => {
     const note = notes[q.id] ? `\n   Note: ${notes[q.id]}` : '';
-    return `${i + 1}. ${q.question}\n   [${depthLabel[q.depth]} · ${categoryLabel(q.category)} · ${q.type}]${note}`;
+    return `${i + 1}. ${q.question}\n   [${DEPTH_LABELS[q.depth]} · ${categoryLabel(q.category)} · ${q.type}]${note}`;
   });
   const text = `Saved Questions — Perception\nExported ${new Date().toLocaleDateString()}\n\n${lines.join('\n\n')}`;
 
@@ -255,27 +319,6 @@ function exportSaved() {
   a.download = `perception-saved-${new Date().toISOString().slice(0,10)}.txt`;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-/* ── Surprise me ────────────────────────────── */
-function surpriseMe() {
-  if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
-  const depthOptions = [
-    [1,2,3],[1,2,3],[1,2,3],
-    [1,2],
-    [2,3],
-    [2],
-  ];
-  const depths = depthOptions[Math.floor(Math.random() * depthOptions.length)];
-  const shuffled = [...ALL_CATEGORIES].sort(() => Math.random() - 0.5);
-  const categories = shuffled.slice(0, 3 + Math.round(Math.random()));
-  filters = { categories, depths, setting: filters.setting, types: [...ALL_TYPES] };
-  saveFilters(filters);
-  buildPool();
-  ui.updateFilterBadge(filters);
-  ui.applyFiltersToChips(filters);
-  ui.closeSheet();
-  if (currentView === 'cards') drawCard(true);
 }
 
 /* ── Session reset ──────────────────────────── */
@@ -304,6 +347,7 @@ function confirmReset() {
   });
   ui.els.navBar.style.display     = 'none';
   ui.els.btnFilter.style.display  = 'none';
+  ui.els.btnDecks.style.display   = 'none';
   ui.els.btnNewSess.style.display = 'none';
   ui.els.cardView.classList.remove('active');
   ui.els.favoritesView.classList.remove('active');
@@ -392,39 +436,33 @@ function wireEvents() {
     document.getElementById('note-char-count').textContent = `${e.target.value.length} / 500`;
   });
 
+  // Escape closes the topmost open layer only
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    if (document.getElementById('note-dialog').classList.contains('open')) ui.closeNoteDialog();
-    if (ui.els.resetDialog.classList.contains('open')) ui.closeDialog();
-    if (ui.els.filterSheet.classList.contains('open')) ui.closeSheet();
-    if (ui.els.deckSheet.classList.contains('open')) ui.closeDeckSheet();
+    if      (document.getElementById('note-dialog').classList.contains('open')) ui.closeNoteDialog();
+    else if (ui.els.resetDialog.classList.contains('open')) ui.closeDialog();
+    else if (ui.els.filterSheet.classList.contains('open')) ui.closeSheet();
+    else if (ui.els.deckSheet.classList.contains('open'))   ui.closeDeckSheet();
   });
 
   ui.els.savedChip.addEventListener('click', () => navigateTo('favorites'));
 
   document.getElementById('btn-start').addEventListener('click', completeSetup);
 
-  document.getElementById('setup-setting').addEventListener('click', e => {
-    const btn = e.target.closest('.setting-card');
-    if (!btn) return;
-    document.querySelectorAll('.setting-card').forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-pressed', 'false');
+  const wireSingleSelect = (containerId, itemSelector) => {
+    document.getElementById(containerId).addEventListener('click', e => {
+      const btn = e.target.closest(itemSelector);
+      if (!btn) return;
+      document.querySelectorAll(itemSelector).forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
     });
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
-  });
-
-  document.getElementById('setup-depth').addEventListener('click', e => {
-    const btn = e.target.closest('.depth-card');
-    if (!btn) return;
-    document.querySelectorAll('.depth-card').forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-pressed', 'false');
-    });
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
-  });
+  };
+  wireSingleSelect('setup-setting', '.setting-card');
+  wireSingleSelect('setup-depth',   '.depth-card');
 
   ui.els.navCards.addEventListener('click',    () => navigateTo('cards'));
   ui.els.navSaved.addEventListener('click',    () => navigateTo('favorites'));
@@ -439,15 +477,14 @@ function wireEvents() {
   ui.els.btnDecks.addEventListener('click', ui.openDeckSheet);
   ui.els.deckScrim.addEventListener('click', ui.closeDeckSheet);
 
-  document.getElementById('chips-depth').addEventListener('click', e => {
-    const c = e.target.closest('.chip'); if (c) c.classList.toggle('active');
+  const wireChipToggle = el => el.addEventListener('click', e => {
+    const c = e.target.closest('.chip');
+    if (c) c.classList.toggle('active');
   });
-  document.getElementById('chips-category').addEventListener('click', e => {
-    const c = e.target.closest('.chip'); if (c) c.classList.toggle('active');
-  });
-  ui.els.chipsType.addEventListener('click', e => {
-    const c = e.target.closest('.chip'); if (c) c.classList.toggle('active');
-  });
+  wireChipToggle(document.getElementById('chips-depth'));
+  wireChipToggle(document.getElementById('chips-category'));
+  wireChipToggle(ui.els.chipsType);
+
   document.getElementById('chips-setting').addEventListener('click', e => {
     const btn = e.target.closest('.seg-btn');
     if (!btn) return;
@@ -467,43 +504,23 @@ function wireEvents() {
     if (!btn) return;
     const preset = FILTER_PRESETS.find(p => p.id === btn.dataset.preset);
     if (!preset) return;
-    if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
-    filters = { depths: [...preset.depths], categories: [...preset.categories], setting: preset.setting, types: [...preset.types] };
-    saveFilters(filters);
-    buildPool();
-    ui.updateFilterBadge(filters);
-    ui.applyFiltersToChips(filters);
-    ui.closeSheet();
-    if (currentView === 'cards') drawCard(true);
+    applyNewFilters({
+      depths:     [...preset.depths],
+      categories: [...preset.categories],
+      setting:    preset.setting,
+      types:      [...preset.types],
+    });
   });
 
-  document.getElementById('deck-grid').addEventListener('click', e => {
+  ui.els.deckGrid.addEventListener('click', e => {
     const btn = e.target.closest('.deck-card');
     if (!btn) return;
     startDeck(btn.dataset.deck);
   });
 
-  document.getElementById('btn-exit-deck').addEventListener('click', exitDeck);
+  ui.els.btnExitDeck.addEventListener('click', exitDeck);
 
-  ui.els.btnApply.addEventListener('click', () => {
-    if (activeDeck) { activeDeck = null; ui.syncDeckMode(null); history.replaceState(null, '', location.pathname); }
-    const depths     = [...document.querySelectorAll('#chips-depth    .chip.active')].map(c => Number(c.dataset.val));
-    const categories = [...document.querySelectorAll('#chips-category .chip.active')].map(c => c.dataset.val);
-    const types      = [...document.querySelectorAll('#chips-type     .chip.active')].map(c => c.dataset.val);
-    const setting    = document.querySelector('#chips-setting .seg-btn.active')?.dataset.val || 'any';
-
-    filters = {
-      depths:     depths.length     ? depths     : [1, 2, 3],
-      categories: categories.length ? categories : [...ALL_CATEGORIES],
-      types:      types.length      ? types      : [...ALL_TYPES],
-      setting,
-    };
-    saveFilters(filters);
-    buildPool();
-    ui.updateFilterBadge(filters);
-    ui.closeSheet();
-    if (currentView === 'cards') drawCard(true);
-  });
+  ui.els.btnApply.addEventListener('click', applyFiltersFromSheet);
 
   ui.els.btnReset.addEventListener('click', () => {
     filters = { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };

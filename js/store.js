@@ -5,7 +5,7 @@ export const STORAGE_THEME   = 'conv_card_theme';
 export const STORAGE_NOTES   = 'conv_card_notes';
 export const STORAGE_SEEN    = 'conv_card_seen';
 export const STORAGE_RATINGS = 'conv_card_ratings';
-export const APP_VERSION     = '1.4.0';
+export const APP_VERSION     = '1.4.1';
 
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
@@ -58,58 +58,38 @@ export const FILTER_PRESETS = [
   },
 ];
 
-export function loadFilters() {
+/* ── Persistence ────────────────────────────── */
+function read(key, fallback) {
   try {
-    const raw = localStorage.getItem(STORAGE_FILTERS);
-    if (raw) {
-      const f = JSON.parse(raw);
-      return {
-        categories: f.categories || [...ALL_CATEGORIES],
-        depths:     (f.depths || [1, 2, 3]).map(Number),
-        setting:    f.setting || 'any',
-        types:      f.types   || [...ALL_TYPES],
-      };
-    }
-  } catch(e) { /* ignore */ }
-  return { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return JSON.parse(raw) ?? fallback;
+  } catch (e) {
+    return fallback;
+  }
 }
 
-export function saveFilters(filters) {
-  localStorage.setItem(STORAGE_FILTERS, JSON.stringify(filters));
+function write(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function loadFavs() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_FAVS)) || []; }
-  catch(e) { return []; }
+export function loadFilters() {
+  const f = read(STORAGE_FILTERS, null);
+  if (!f) return { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
+  return {
+    categories: f.categories || [...ALL_CATEGORIES],
+    depths:     (f.depths || [1, 2, 3]).map(Number),
+    setting:    f.setting || 'any',
+    types:      f.types   || [...ALL_TYPES],
+  };
 }
 
-export function saveFavs(favorites) {
-  localStorage.setItem(STORAGE_FAVS, JSON.stringify(favorites));
-}
-
-export function loadNotes() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_NOTES)) || {}; }
-  catch(e) { return {}; }
-}
-
-export function saveNotes(notes) {
-  localStorage.setItem(STORAGE_NOTES, JSON.stringify(notes));
-}
-
-export function loadSeen() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_SEEN)) || []; }
-  catch(e) { return []; }
-}
-
-export function saveSeen(seen) {
-  localStorage.setItem(STORAGE_SEEN, JSON.stringify(seen));
-}
-
-export function loadRatings() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_RATINGS)) || {}; }
-  catch(e) { return {}; }
-}
-
-export function saveRatings(ratings) {
-  localStorage.setItem(STORAGE_RATINGS, JSON.stringify(ratings));
-}
+export const saveFilters = filters   => write(STORAGE_FILTERS, filters);
+export const loadFavs    = ()        => read(STORAGE_FAVS, []);
+export const saveFavs    = favorites => write(STORAGE_FAVS, favorites);
+export const loadNotes   = ()        => read(STORAGE_NOTES, {});
+export const saveNotes   = notes     => write(STORAGE_NOTES, notes);
+export const loadSeen    = ()        => read(STORAGE_SEEN, []);
+export const saveSeen    = seen      => write(STORAGE_SEEN, seen);
+export const loadRatings = ()        => read(STORAGE_RATINGS, {});
+export const saveRatings = ratings   => write(STORAGE_RATINGS, ratings);

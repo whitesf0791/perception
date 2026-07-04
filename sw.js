@@ -1,4 +1,4 @@
-const CACHE_NAME = 'conv-cards-v20';
+const CACHE_NAME = 'conv-cards-v21';
 const ASSETS = [
   './',
   './index.html',
@@ -31,14 +31,24 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
   // Always hit the network for version checks so cache: no-store is respected
-  if (event.request.url.endsWith('/version.json')) {
+  if (req.url.endsWith('/version.json')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(req).catch(() => caches.match(req))
     );
     return;
   }
+
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(req).then(cached =>
+      cached || fetch(req).catch(() =>
+        req.mode === 'navigate'
+          ? caches.match('./index.html')
+          : new Response('', { status: 503, statusText: 'Offline' })
+      )
+    )
   );
 });

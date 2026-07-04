@@ -51,6 +51,10 @@ export const els = {
   deckGrid:     document.getElementById('deck-grid'),
 };
 
+/* Escape user-controlled text before innerHTML interpolation */
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 /* ── Theme ──────────────────────────────────── */
 export function loadTheme() {
   if (localStorage.getItem(STORAGE_THEME) === 'light') {
@@ -105,21 +109,21 @@ export function updateSavedChip(n) {
 
 /* ── Progress bar ───────────────────────────── */
 export function updateProgress(pool, seen, deck = null) {
+  let text, pct;
   if (deck) {
     const total      = deck.ids.length;
-    const seenInDeck = seen.filter(id => deck.ids.includes(id)).length;
-    const pct        = total > 0 ? Math.round((seenInDeck / total) * 100) : 0;
-    els.poolInfo.textContent = `${deck.label} · ${seenInDeck} of ${total}`;
-    els.progressFill.style.width = pct + '%';
-    els.progressTrack.setAttribute('aria-valuenow', pct);
-    return;
+    const deckIds    = new Set(deck.ids);
+    const seenInDeck = seen.filter(id => deckIds.has(id)).length;
+    pct  = total > 0 ? Math.round((seenInDeck / total) * 100) : 0;
+    text = `${deck.label} · ${seenInDeck} of ${total}`;
+  } else {
+    const seenSet = new Set(seen);
+    const unseen  = pool.filter(q => !seenSet.has(q.id)).length;
+    const total   = pool.length;
+    pct  = total > 0 ? Math.round((unseen / total) * 100) : 0;
+    text = total > 0 ? `${unseen} of ${total} remaining` : 'No questions match filters';
   }
-  const unseen = pool.filter(q => !seen.includes(q.id));
-  const total  = pool.length;
-  const pct    = total > 0 ? Math.round((unseen.length / total) * 100) : 0;
-  els.poolInfo.textContent = total > 0
-    ? `${unseen.length} of ${total} remaining`
-    : 'No questions match filters';
+  els.poolInfo.textContent = text;
   els.progressFill.style.width = pct + '%';
   els.progressTrack.setAttribute('aria-valuenow', pct);
 }
@@ -130,12 +134,11 @@ export function showView(name, savedCount) {
   els.favoritesView.classList.toggle('active', name === 'favorites');
   els.settingsView.classList.toggle('active',  name === 'settings');
 
-  els.navCards.classList.toggle('active', name === 'cards');
-  els.navCards.setAttribute('aria-current', name === 'cards'     ? 'page' : 'false');
-  els.navSaved.classList.toggle('active', name === 'favorites');
-  els.navSaved.setAttribute('aria-current', name === 'favorites' ? 'page' : 'false');
-  els.navSettings.classList.toggle('active', name === 'settings');
-  els.navSettings.setAttribute('aria-current', name === 'settings' ? 'page' : 'false');
+  const navMap = [[els.navCards, 'cards'], [els.navSaved, 'favorites'], [els.navSettings, 'settings']];
+  navMap.forEach(([btn, view]) => {
+    btn.classList.toggle('active', name === view);
+    btn.setAttribute('aria-current', name === view ? 'page' : 'false');
+  });
 
   els.btnFilter.style.display = name === 'cards' ? '' : 'none';
   els.btnDecks.style.display  = name === 'cards' ? '' : 'none';
@@ -160,7 +163,7 @@ export function renderFavorites(savedQs, notes, onRemove, onNote) {
             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
         </svg>
         <p class="empty-favs__headline">Nothing saved yet</p>
-        <p class="empty-favs__body">Swipe left on a card or tap Save<br>to keep a question here.</p>
+        <p class="empty-favs__body">Tap Save on a card<br>to keep a question here.</p>
       </div>`;
     return;
   }
@@ -169,7 +172,7 @@ export function renderFavorites(savedQs, notes, onRemove, onNote) {
   savedQs.forEach(q => {
     const note = notes[q.id] || '';
     const notePreview = note
-      ? `<p class="fav-item__note">${note.length > 80 ? note.slice(0, 78) + '…' : note}</p>`
+      ? `<p class="fav-item__note">${esc(note.length > 80 ? note.slice(0, 78) + '…' : note)}</p>`
       : '';
     const item = document.createElement('div');
     item.className = 'fav-item';
@@ -177,7 +180,7 @@ export function renderFavorites(savedQs, notes, onRemove, onNote) {
     item.innerHTML = `
       <div class="fav-item__depth d${q.depth}" aria-hidden="true"></div>
       <div class="fav-item__body">
-        <p class="fav-item__text">${q.question}</p>
+        <p class="fav-item__text">${esc(q.question)}</p>
         ${notePreview}
       </div>
       <button class="fav-item__note-btn${note ? ' has-note' : ''}" data-id="${q.id}" aria-label="${note ? 'Edit note' : 'Add note'}">
@@ -203,6 +206,7 @@ export function renderFavorites(savedQs, notes, onRemove, onNote) {
   });
 }
 
+/* ── Note dialog ────────────────────────────── */
 let _noteCb = null;
 export function openNoteDialog(id, existingText, questionText, cb) {
   _noteCb = cb;
@@ -210,10 +214,8 @@ export function openNoteDialog(id, existingText, questionText, cb) {
   const scrim    = document.getElementById('note-scrim');
   const textarea = document.getElementById('note-textarea');
   const counter  = document.getElementById('note-char-count');
-  const title    = document.getElementById('note-dialog-title');
-  const qEl      = document.getElementById('note-dialog-question');
-  title.textContent = existingText ? 'Edit note' : 'Add a note';
-  qEl.textContent   = questionText;
+  document.getElementById('note-dialog-title').textContent    = existingText ? 'Edit note' : 'Add a note';
+  document.getElementById('note-dialog-question').textContent = questionText;
   textarea.value = existingText;
   counter.textContent = `${existingText.length} / 500`;
   dlg.setAttribute('aria-hidden', 'false');
@@ -255,12 +257,11 @@ export function updateSettingsView(favsCount, version, { poolSize = 0, seenCount
 
   // Your data group
   document.getElementById('settings-saved-count-data').textContent =
-    favsCount === 0 ? 'Tap the heart to bookmark cards' : favText;
+    favsCount === 0 ? 'Tap Save to bookmark cards' : favText;
   document.getElementById('settings-seen-count').textContent =
     seenCount === 0 ? 'No cards seen yet' : `${seenCount} card${seenCount !== 1 ? 's' : ''} seen this session`;
 
-  const btnExport = document.getElementById('btn-export-saved');
-  if (btnExport) btnExport.disabled = favsCount === 0;
+  els.btnExportSaved.disabled = favsCount === 0;
 
   document.getElementById('settings-version').textContent = `v${version}`;
 
@@ -281,7 +282,7 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
         ${DEPTH_LABELS[q.depth]}
       </div>
     </div>
-    <p class="card__question">${q.question}</p>
+    <p class="card__question">${esc(q.question)}</p>
     <div class="card__footer">
       <div class="card__rating" role="group" aria-label="Rate this question">
         <button class="rating-btn rating-btn--down${rating === -1 ? ' is-active' : ''}"
@@ -303,8 +304,7 @@ export function drawCard(q, isSaved, animate, { onNext, onSave, onUndo, onRate, 
           </svg>
         </button>
       </div>
-      <span class="card__saved-icon${isSaved ? ' is-saved' : ''}"
-            aria-label="${isSaved ? 'Saved' : ''}" aria-hidden="true">
+      <span class="card__saved-icon${isSaved ? ' is-saved' : ''}" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
              fill="${isSaved ? 'currentColor' : 'none'}"
              stroke="currentColor" stroke-width="2">
@@ -345,36 +345,18 @@ export function renderEmpty(poolSize, onRestart) {
       </svg>
       <p class="empty-state__headline">You’ve seen them all</p>
       <p class="empty-state__body">${poolSize} question${poolSize !== 1 ? 's' : ''} in this filter.<br>Start over or adjust your filters.</p>
-      <button class="btn-filled" id="btn-pool-reset" style="max-width:180px">
-        Start over
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
-        </svg>
-      </button>
+      <div class="empty-state__actions">
+        <button class="btn-filled" id="btn-pool-reset">
+          Start over
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" d="M4 4v5h5M20 20v-5h-5M4.93 9A10 10 0 1 0 7.6 6.3"/>
+          </svg>
+        </button>
+      </div>
     </div>`;
   els.cardActions.style.display = 'none';
   document.getElementById('btn-pool-reset').addEventListener('click', onRestart);
-}
-
-export function syncSaveBtn(isSaved) {
-  els.btnSave.classList.toggle('is-saved', isSaved);
-  els.btnSave.setAttribute('aria-label', isSaved ? 'Already saved' : 'Save question');
-  const svg = els.btnSave.querySelector('svg');
-  if (svg) svg.setAttribute('fill', isSaved ? 'currentColor' : 'none');
-}
-
-export function syncUndoBtn(visible) {
-  els.btnUndo.style.display = visible ? '' : 'none';
-}
-
-export function syncDeckMode(deck) {
-  const active = !!deck;
-  els.btnExitDeck.style.display = active ? '' : 'none';
-  els.btnFilter.style.display   = active ? 'none' : '';
-  els.btnDecks.style.display    = active ? 'none' : '';
-  document.querySelectorAll('.deck-card').forEach(c =>
-    c.classList.toggle('is-active', c.dataset.deck === deck?.id));
 }
 
 export function renderDeckComplete(label, onRestart, onExit) {
@@ -386,11 +368,11 @@ export function renderDeckComplete(label, onRestart, onExit) {
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
       </svg>
-      <p class="empty-state__headline">${label} complete</p>
+      <p class="empty-state__headline">${esc(label)} complete</p>
       <p class="empty-state__body">You've been through all the cards in this deck.</p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn-outlined" id="btn-deck-exit" style="min-width:120px">Free play</button>
-        <button class="btn-filled"   id="btn-deck-restart" style="min-width:120px">
+      <div class="empty-state__actions">
+        <button class="btn-outlined" id="btn-deck-exit">Free play</button>
+        <button class="btn-filled"   id="btn-deck-restart">
           Go again
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -404,6 +386,27 @@ export function renderDeckComplete(label, onRestart, onExit) {
   document.getElementById('btn-deck-exit').addEventListener('click', onExit);
 }
 
+/* ── Card state sync ────────────────────────── */
+export function syncSaveBtn(isSaved) {
+  els.btnSave.classList.toggle('is-saved', isSaved);
+  els.btnSave.setAttribute('aria-label', isSaved ? 'Already saved' : 'Save question');
+  const svg = els.btnSave.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isSaved ? 'currentColor' : 'none');
+}
+
+/* Heart indicator on the card itself */
+export function syncSavedIcon(isSaved) {
+  const icon = els.cardArea.querySelector('.card__saved-icon');
+  if (!icon) return;
+  icon.classList.toggle('is-saved', isSaved);
+  const svg = icon.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isSaved ? 'currentColor' : 'none');
+}
+
+export function syncUndoBtn(visible) {
+  els.btnUndo.style.display = visible ? '' : 'none';
+}
+
 export function syncRatingBtns(value) {
   const card = els.cardArea.querySelector('.card');
   if (!card) return;
@@ -413,12 +416,21 @@ export function syncRatingBtns(value) {
   if (down) { down.classList.toggle('is-active', value === -1); down.setAttribute('aria-pressed', String(value === -1)); }
 }
 
+export function syncDeckMode(deck) {
+  const active = !!deck;
+  els.btnExitDeck.style.display = active ? '' : 'none';
+  els.btnFilter.style.display   = active ? 'none' : '';
+  els.btnDecks.style.display    = active ? 'none' : '';
+  document.querySelectorAll('.deck-card').forEach(c =>
+    c.classList.toggle('is-active', c.dataset.deck === deck?.id));
+}
+
 /* ── Card gestures ──────────────────────────── */
 export function setupCardInteraction(card, { onNext, onSave, onUndo, onRate }) {
   const THRESHOLD  = 65;
   const leftLabel  = card.querySelector('.swipe-label.left');
   const rightLabel = card.querySelector('.swipe-label.right');
-  let startX = 0, startY = 0, dragging = false, moved = false, longTimer = null;
+  let startX = 0, startY = 0, dragging = false, moved = false;
 
   card.querySelector('.rating-btn--up').addEventListener('click',   () => onRate(1));
   card.querySelector('.rating-btn--down').addEventListener('click', () => onRate(-1));
@@ -436,7 +448,7 @@ export function setupCardInteraction(card, { onNext, onSave, onUndo, onRate }) {
   function move(x, y) {
     if (!dragging) return;
     const dx = x - startX, dy = Math.abs(y - startY);
-    if (Math.abs(dx) > 6 || dy > 6) { moved = true; }
+    if (Math.abs(dx) > 6 || dy > 6) moved = true;
     if (Math.abs(dx) > 8) {
       card.style.transform = `translateX(${dx * 0.38}px) rotate(${dx * 0.025}deg)`;
       const p = Math.min(1, Math.abs(dx) / THRESHOLD);
@@ -480,32 +492,20 @@ export function exitCard(card, direction, callback) {
   setTimeout(callback, 280);
 }
 
-/* ── Deck sheet ─────────────────────────────── */
-export function openDeckSheet() {
-  els.deckSheet.classList.add('open');
-  els.deckScrim.classList.add('open');
-  els.deckScrim.removeAttribute('aria-hidden');
+/* ── Bottom sheets ──────────────────────────── */
+function setSheet(sheet, scrim, open) {
+  sheet.classList.toggle('open', open);
+  scrim.classList.toggle('open', open);
+  if (open) scrim.removeAttribute('aria-hidden');
+  else      scrim.setAttribute('aria-hidden', 'true');
 }
 
-export function closeDeckSheet() {
-  els.deckSheet.classList.remove('open');
-  els.deckScrim.classList.remove('open');
-  els.deckScrim.setAttribute('aria-hidden', 'true');
-}
+export const openSheet      = () => setSheet(els.filterSheet, els.scrim, true);
+export const closeSheet     = () => setSheet(els.filterSheet, els.scrim, false);
+export const openDeckSheet  = () => setSheet(els.deckSheet, els.deckScrim, true);
+export const closeDeckSheet = () => setSheet(els.deckSheet, els.deckScrim, false);
 
-/* ── Filter sheet ───────────────────────────── */
-export function openSheet() {
-  els.filterSheet.classList.add('open');
-  els.scrim.classList.add('open');
-  els.scrim.removeAttribute('aria-hidden');
-}
-
-export function closeSheet() {
-  els.filterSheet.classList.remove('open');
-  els.scrim.classList.remove('open');
-  els.scrim.setAttribute('aria-hidden', 'true');
-}
-
+/* ── Filter chips ───────────────────────────── */
 export function updateFilterBadge(filters) {
   const isDefault =
     filters.depths.length    === 3 &&
