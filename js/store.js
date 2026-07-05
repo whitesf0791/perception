@@ -1,11 +1,18 @@
-export const STORAGE_FILTERS = 'conv_card_filters';
-export const STORAGE_FAVS    = 'conv_card_favorites';
-export const STORAGE_SETUP   = 'conv_card_setup_done';
-export const STORAGE_THEME   = 'conv_card_theme';
-export const STORAGE_NOTES   = 'conv_card_notes';
-export const STORAGE_SEEN    = 'conv_card_seen';
-export const STORAGE_RATINGS = 'conv_card_ratings';
-export const APP_VERSION     = '1.4.1';
+export const STORAGE_FILTERS   = 'conv_card_filters';
+export const STORAGE_FAVS      = 'conv_card_favorites';
+export const STORAGE_SETUP     = 'conv_card_setup_done';
+export const STORAGE_THEME     = 'conv_card_theme';
+export const STORAGE_NOTES     = 'conv_card_notes';
+export const STORAGE_SEEN      = 'conv_card_seen';
+export const STORAGE_RATINGS   = 'conv_card_ratings';
+export const STORAGE_PLAYERS   = 'conv_card_players';
+export const STORAGE_DECK_PROG = 'conv_card_deck_progress';
+export const STORAGE_CUSTOM    = 'conv_card_custom';
+export const STORAGE_TIMER     = 'conv_card_timer';
+export const APP_VERSION       = '1.5.0';
+
+/* Custom question ids start here to never collide with the library */
+export const CUSTOM_ID_BASE = 100000;
 
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
@@ -84,12 +91,20 @@ export function loadFilters() {
   };
 }
 
-export const saveFilters = filters   => write(STORAGE_FILTERS, filters);
-export const loadFavs    = ()        => read(STORAGE_FAVS, []);
-export const saveFavs    = favorites => write(STORAGE_FAVS, favorites);
-export const loadNotes   = ()        => read(STORAGE_NOTES, {});
-export const saveNotes   = notes     => write(STORAGE_NOTES, notes);
-export const loadSeen    = ()        => read(STORAGE_SEEN, []);
-export const saveSeen    = seen      => write(STORAGE_SEEN, seen);
-export const loadRatings = ()        => read(STORAGE_RATINGS, {});
-export const saveRatings = ratings   => write(STORAGE_RATINGS, ratings);
+export const saveFilters      = filters   => write(STORAGE_FILTERS, filters);
+export const loadFavs         = ()        => read(STORAGE_FAVS, []);
+export const saveFavs         = favorites => write(STORAGE_FAVS, favorites);
+export const loadNotes        = ()        => read(STORAGE_NOTES, {});
+export const saveNotes        = notes     => write(STORAGE_NOTES, notes);
+export const loadSeen         = ()        => read(STORAGE_SEEN, []);
+export const saveSeen         = seen      => write(STORAGE_SEEN, seen);
+export const loadRatings      = ()        => read(STORAGE_RATINGS, {});
+export const saveRatings      = ratings   => write(STORAGE_RATINGS, ratings);
+export const loadPlayers      = ()        => read(STORAGE_PLAYERS, { names: [], turn: 0 });
+export const savePlayers      = players   => write(STORAGE_PLAYERS, players);
+export const loadDeckProgress = ()        => read(STORAGE_DECK_PROG, {});
+export const saveDeckProgress = progress  => write(STORAGE_DECK_PROG, progress);
+export const loadCustom       = ()        => read(STORAGE_CUSTOM, []);
+export const saveCustom       = customs   => write(STORAGE_CUSTOM, customs);
+export const loadTimer        = ()        => read(STORAGE_TIMER, 0);
+export const saveTimer        = secs      => write(STORAGE_TIMER, secs);

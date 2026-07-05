@@ -134,6 +134,17 @@
         </div>
       </div>
 
+      <!-- Players (optional) -->
+      <div class="setup-section">
+        <p class="setup-section__label">Players <span class="setup-section__hint">(optional — for turn taking)</span></p>
+        <div class="player-row">
+          <input class="player-input" id="player-input" type="text" maxlength="20"
+                 placeholder="Add a name…" aria-label="Player name" />
+          <button class="btn-outlined" id="btn-add-player">Add</button>
+        </div>
+        <div class="player-chips" id="player-chips" role="list" aria-label="Players"></div>
+      </div>
+
       <button class="setup-cta" id="btn-start">
         Let's go
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -167,6 +178,12 @@
         <span id="saved-chip-count">0</span>
       </button>
     </div>
+
+    <div class="turn-banner" id="turn-banner" style="display:none">
+      <span class="turn-banner__label" id="turn-label"></span>
+    </div>
+
+    <span class="sr-only" id="sr-question" aria-live="polite"></span>
 
     <div class="card-area" id="card-area">
       <!-- Card injected by JS -->
@@ -206,7 +223,10 @@
   ══════════════════════════════════════ -->
   <div id="favorites-view" class="view" role="main" aria-label="Saved questions">
     <div class="favorites-view__header">
-      <p class="favorites-view__title">Saved</p>
+      <div class="fav-tabs" role="tablist" aria-label="Saved and history">
+        <button class="fav-tab active" id="tab-saved" role="tab" aria-selected="true">Saved</button>
+        <button class="fav-tab" id="tab-history" role="tab" aria-selected="false">History</button>
+      </div>
       <p class="favorites-view__count" id="favs-count"></p>
     </div>
     <div class="favorites-list" id="favorites-list" role="list"></div>
@@ -283,6 +303,54 @@
         </div>
       </div>
 
+      <!-- Gameplay -->
+      <div class="settings-group">
+        <p class="settings-group__label">Gameplay</p>
+        <div class="settings-item">
+          <div class="settings-item__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="13" r="8"/>
+              <path stroke-linecap="round" d="M12 9v4l2.5 2.5M9 2h6"/>
+            </svg>
+          </div>
+          <div class="settings-item__content">
+            <span class="settings-item__title">Answer timer</span>
+            <span class="settings-item__sub">Countdown shown on each card</span>
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="segmented-group segmented-group--full" id="timer-seg" role="group" aria-label="Answer timer">
+            <button class="seg-btn active" data-secs="0">Off</button>
+            <button class="seg-btn" data-secs="60">60s</button>
+            <button class="seg-btn" data-secs="90">90s</button>
+            <button class="seg-btn" data-secs="120">2m</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your questions -->
+      <div class="settings-group">
+        <p class="settings-group__label">Your questions</p>
+        <div class="settings-item">
+          <div class="settings-item__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </div>
+          <div class="settings-item__content">
+            <span class="settings-item__title">Custom questions</span>
+            <span class="settings-item__sub" id="settings-custom-count">Write your own — they join the deck</span>
+            <div class="settings-item__actions">
+              <button class="btn-outlined" id="btn-add-custom">Add</button>
+              <button class="btn-outlined" id="btn-manage-custom">Manage</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Your data -->
       <div class="settings-group">
         <p class="settings-group__label">Your data</p>
@@ -335,6 +403,20 @@
             <span class="settings-item__title">Version</span>
             <span class="settings-item__sub" id="settings-version"></span>
           </div>
+        </div>
+        <div class="settings-item" id="install-item" style="display:none">
+          <div class="settings-item__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+            </svg>
+          </div>
+          <div class="settings-item__content">
+            <span class="settings-item__title">Install app</span>
+            <span class="settings-item__sub">Add to your home screen</span>
+          </div>
+          <button class="btn-outlined" id="btn-install">Install</button>
         </div>
         <div class="settings-item settings-item--col">
           <button class="btn-outlined" id="btn-check-update">Check for updates</button>
@@ -613,6 +695,46 @@
     <button class="btn-text dialog__confirm" id="note-save">Save</button>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════
+     ADD CUSTOM QUESTION DIALOG
+══════════════════════════════════════ -->
+<div class="dialog-scrim" id="custom-scrim" aria-hidden="true"></div>
+<div class="dialog dialog--note" id="custom-dialog"
+     role="dialog" aria-modal="true"
+     aria-labelledby="custom-dialog-title" aria-hidden="true">
+  <h2 class="dialog__headline" id="custom-dialog-title">Add a question</h2>
+  <textarea class="note-textarea" id="custom-textarea"
+            placeholder="Write a question worth asking…"
+            maxlength="280" rows="3"></textarea>
+  <p class="note-char-count" id="custom-char-count">0 / 280</p>
+  <div class="segmented-group" id="custom-depth-seg" role="group" aria-label="Question depth">
+    <button class="seg-btn active" data-depth="1">Light</button>
+    <button class="seg-btn" data-depth="2">Moderate</button>
+    <button class="seg-btn" data-depth="3">Deep</button>
+  </div>
+  <div class="dialog__actions">
+    <button class="btn-text" id="custom-cancel">Cancel</button>
+    <button class="btn-text dialog__confirm" id="custom-add">Add</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MANAGE CUSTOM QUESTIONS SHEET
+══════════════════════════════════════ -->
+<div class="scrim" id="custom-sheet-scrim" aria-hidden="true"></div>
+<div class="bottom-sheet" id="custom-sheet"
+     role="dialog" aria-modal="true" aria-label="Your custom questions">
+  <div class="sheet__handle" aria-hidden="true"></div>
+  <div class="sheet__scroll">
+    <p class="sheet__title">Your Questions</p>
+    <p class="sheet__subtitle">Custom questions join the deck alongside the built-in library.</p>
+    <div class="custom-list" id="custom-list"></div>
+  </div>
+</div><!-- /#custom-sheet -->
+
+<!-- Toast / snackbar -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module" src="./js/app.js"></script>
 </body>
