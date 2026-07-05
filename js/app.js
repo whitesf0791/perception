@@ -1,26 +1,59 @@
 import { questions } from '../data/questions.js';
 import { DECKS }     from '../data/decks.js';
 import {
-  STORAGE_SETUP, APP_VERSION, DEPTH_LABELS,
+  STORAGE_SETUP, APP_VERSION, DEPTH_LABELS, CUSTOM_ID_BASE,
   ALL_CATEGORIES, ALL_TYPES, DEFAULT_FILTERS, FILTER_PRESETS,
   loadFilters, saveFilters, loadFavs, saveFavs,
   loadNotes, saveNotes, loadSeen, saveSeen,
   loadRatings, saveRatings,
+  loadPlayers, savePlayers, loadDeckProgress, saveDeckProgress,
+  loadCustom, saveCustom, loadTimer, saveTimer,
 } from './store.js';
 import * as ui from './ui.js';
 
 /* ── State ──────────────────────────────────── */
-const questionById = new Map(questions.map(q => [q.id, q]));
+let filters      = loadFilters();
+let favorites    = loadFavs();
+let notes        = loadNotes();
+let seen         = loadSeen();          // free-play history
+let ratings      = loadRatings();
+let players      = loadPlayers();       // { names: [], turn: 0 }
+let deckProgress = loadDeckProgress();  // { deckId: [seen ids] }
+let customQs     = loadCustom();        // [{ id, question, depth }]
+let timerSecs    = loadTimer();
+let pool         = [];
+let current      = null;
+let currentView  = 'cards';
+let activeDeck   = null;
+let favTab       = 'saved';
+let installPrompt = null;
 
-let filters     = loadFilters();
-let favorites   = loadFavs();
-let notes       = loadNotes();
-let seen        = loadSeen();
-let ratings     = loadRatings();
-let pool        = [];
-let current     = null;
-let currentView = 'cards';
-let activeDeck  = null;
+let allQuestions = [];
+let questionById = new Map();
+
+function rebuildQuestionIndex() {
+  allQuestions = [
+    ...questions,
+    ...customQs.map(c => ({ ...c, category: 'custom', type: 'reveal', setting: 'both', custom: true })),
+  ];
+  questionById = new Map(allQuestions.map(q => [q.id, q]));
+}
+rebuildQuestionIndex();
+
+/* Seen history is per-mode: deck progress persists per deck id */
+function getSeen() {
+  return activeDeck ? (deckProgress[activeDeck.id] || []) : seen;
+}
+
+function setSeenList(list) {
+  if (activeDeck) {
+    deckProgress[activeDeck.id] = list;
+    saveDeckProgress(deckProgress);
+  } else {
+    seen = list;
+    saveSeen(seen);
+  }
+}
 
 /* ── Boot ───────────────────────────────────── */
 function init() {
@@ -29,11 +62,26 @@ function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installPrompt = e;
+    ui.syncInstallItem(true);
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    ui.syncInstallItem(false);
+    ui.showToast('App installed');
+  });
+
   const hash = location.hash;
   if (hash.startsWith('#deck=')) {
     const d = DECKS.find(d => d.id === hash.slice(6));
     if (d) activeDeck = d;
   }
+
+  ui.renderPlayerChips(players.names, removePlayer);
+
   if (localStorage.getItem(STORAGE_SETUP)) {
     enterApp();
   }
@@ -41,9 +89,10 @@ function init() {
 
 /* ── Pool ───────────────────────────────────── */
 function buildPool() {
-  pool = questions.filter(q => {
+  pool = allQuestions.filter(q => {
+    if (!filters.depths.includes(q.depth)) return false;
+    if (q.custom) return true;  // custom questions ignore category/type/setting filters
     if (!filters.categories.includes(q.category)) return false;
-    if (!filters.depths.includes(q.depth))         return false;
     if (!filters.types.includes(q.type))           return false;
     if (filters.setting === 'group') return q.setting === 'both';
     return true;
@@ -51,7 +100,7 @@ function buildPool() {
 }
 
 function pickNext() {
-  const seenSet = new Set(seen);
+  const seenSet = new Set(getSeen());
   if (activeDeck) {
     return activeDeck.ids
       .map(id => questionById.get(id))
@@ -60,36 +109,47 @@ function pickNext() {
   }
   const unseen = pool.filter(q => !seenSet.has(q.id));
   if (!unseen.length) return null;
+
+  // Variety guard: avoid repeating the previous card's category when possible
+  const lastId  = getSeen().at(-1);
+  const lastCat = current?.category ?? questionById.get(lastId)?.category ?? null;
+  let candidates = unseen;
+  if (lastCat) {
+    const varied = unseen.filter(q => q.category !== lastCat);
+    if (varied.length) candidates = varied;
+  }
+
   // Weighted sampling: liked = 3×, disliked = 0.3×, neutral = 1×
-  const weights = unseen.map(q => {
+  const weights = candidates.map(q => {
     const r = ratings[q.id];
     return r === 1 ? 3 : r === -1 ? 0.3 : 1;
   });
   const total = weights.reduce((s, w) => s + w, 0);
   let rand = Math.random() * total;
-  for (let i = 0; i < unseen.length; i++) {
+  for (let i = 0; i < candidates.length; i++) {
     rand -= weights[i];
-    if (rand <= 0) return unseen[i];
+    if (rand <= 0) return candidates[i];
   }
-  return unseen[unseen.length - 1];
+  return candidates[candidates.length - 1];
 }
 
 /* ── Card draw ──────────────────────────────── */
 function cardHandlers(q) {
   return {
-    onNext: doNext,
-    onSave: doSave,
-    onUndo: seen.length > 0 ? doUndo : null,
-    onRate: doRate,
-    rating: ratings[q.id] ?? 0,
+    onNext:  doNext,
+    onSave:  doSave,
+    onUndo:  getSeen().length > 0 ? doUndo : null,
+    onRate:  doRate,
+    onShare: () => shareQuestion(current),
+    rating:  ratings[q.id] ?? 0,
   };
 }
 
 function drawCard(animate = false) {
   const q = pickNext();
   current = q;
-  ui.updateProgress(pool, seen, activeDeck);
-  ui.syncUndoBtn(seen.length > 0);
+  ui.updateProgress(pool, getSeen(), activeDeck);
+  ui.syncUndoBtn(getSeen().length > 0);
 
   if (!q) {
     if (activeDeck) {
@@ -101,6 +161,7 @@ function drawCard(animate = false) {
   }
 
   ui.drawCard(q, favorites.includes(q.id), animate, cardHandlers(q));
+  ui.startCardTimer(timerSecs);
 }
 
 /* Animate the current card off screen, unless a swipe gesture already did. */
@@ -114,9 +175,36 @@ function animateOut(direction, after) {
 }
 
 function restartPool() {
-  seen = [];
-  saveSeen(seen);
+  setSeenList([]);
   drawCard(true);
+}
+
+/* ── Turn taking ────────────────────────────── */
+function advanceTurn(dir = 1) {
+  const n = players.names.length;
+  if (n < 2) return;
+  players.turn = ((players.turn + dir) % n + n) % n;
+  savePlayers(players);
+  ui.syncTurnBanner(players);
+}
+
+function addPlayer() {
+  const name = ui.els.playerInput.value.trim();
+  if (!name) return;
+  if (players.names.length >= 12) { ui.showToast('That’s plenty of players'); return; }
+  players.names.push(name);
+  players.turn = 0;
+  savePlayers(players);
+  ui.els.playerInput.value = '';
+  ui.renderPlayerChips(players.names, removePlayer);
+  ui.els.playerInput.focus();
+}
+
+function removePlayer(index) {
+  players.names.splice(index, 1);
+  players.turn = 0;
+  savePlayers(players);
+  ui.renderPlayerChips(players.names, removePlayer);
 }
 
 /* ── Deck mode ──────────────────────────────── */
@@ -124,27 +212,27 @@ function startDeck(id) {
   const d = DECKS.find(d => d.id === id);
   if (!d) return;
   activeDeck = d;
-  seen = [];
-  saveSeen(seen);
   history.replaceState(null, '', '#deck=' + id);
   ui.syncDeckMode(activeDeck);
   ui.closeSheet();
   ui.closeDeckSheet();
+  const resumed = (deckProgress[d.id] || []).length;
+  if (resumed > 0 && resumed < d.ids.length) {
+    ui.showToast(`Resuming ${d.label} — card ${resumed + 1} of ${d.ids.length}`);
+  }
   if (currentView === 'cards') drawCard(true);
   else navigateTo('cards');
 }
 
 function exitDeck() {
   activeDeck = null;
-  seen = [];
-  saveSeen(seen);
   history.replaceState(null, '', location.pathname);
   ui.syncDeckMode(null);
   buildPool();
   if (currentView === 'cards') drawCard(true);
 }
 
-/* Leave deck mode without resetting history — used when filters take over. */
+/* Leave deck mode without touching progress — used when filters take over. */
 function clearDeckMode() {
   if (!activeDeck) return;
   activeDeck = null;
@@ -154,23 +242,25 @@ function clearDeckMode() {
 
 /* ── Card actions ───────────────────────────── */
 function doUndo() {
-  if (!seen.length) return;
-  const prevQ = questionById.get(seen[seen.length - 1]);
+  const seenList = getSeen();
+  if (!seenList.length) return;
+  const prevQ = questionById.get(seenList[seenList.length - 1]);
   if (!prevQ) return;
-  seen.pop();
-  saveSeen(seen);
-  ui.updateProgress(pool, seen, activeDeck);
-  ui.syncUndoBtn(seen.length > 0);
+  setSeenList(seenList.slice(0, -1));
+  advanceTurn(-1);
+  ui.updateProgress(pool, getSeen(), activeDeck);
+  ui.syncUndoBtn(getSeen().length > 0);
   animateOut('left', () => {
     current = prevQ;
     ui.drawCard(prevQ, favorites.includes(prevQ.id), true, cardHandlers(prevQ));
+    ui.startCardTimer(timerSecs);
   });
 }
 
 function doNext() {
   if (!current) return;
-  seen.push(current.id);
-  saveSeen(seen);
+  setSeenList([...getSeen(), current.id]);
+  advanceTurn(1);
   animateOut('right', () => drawCard(true));
 }
 
@@ -184,8 +274,8 @@ function doSave() {
     ui.syncSaveBtn(true);
     ui.updateSavedChip(favorites.length);
   }
-  seen.push(id);
-  saveSeen(seen);
+  setSeenList([...getSeen(), id]);
+  advanceTurn(1);
   animateOut('right', () => drawCard(true));
 }
 
@@ -201,12 +291,59 @@ function doRate(value) {
   ui.syncRatingBtns(ratings[id] ?? 0);
 }
 
+/* ── Share ──────────────────────────────────── */
+async function shareQuestion(q) {
+  if (!q) return;
+  const text = `"${q.question}"\n\n— Perception, conversation cards`;
+  if (navigator.share) {
+    try { await navigator.share({ text }); } catch (e) { /* user cancelled */ }
+  } else if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      ui.showToast('Copied to clipboard');
+    } catch (e) {
+      ui.showToast('Couldn’t copy — try again');
+    }
+  } else {
+    ui.showToast('Sharing isn’t supported here');
+  }
+}
+
+const shareById = id => shareQuestion(questionById.get(id));
+
 /* ── Navigation ─────────────────────────────── */
 function navigateTo(name) {
   currentView = name;
   ui.showView(name, favorites.length);
-  if (name === 'favorites') ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
-  if (name === 'settings')  ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
+  if (name === 'cards' && current) {
+    // Saved state may have changed from the History tab
+    const isSaved = favorites.includes(current.id);
+    ui.syncSaveBtn(isSaved);
+    ui.syncSavedIcon(isSaved);
+  }
+  if (name === 'favorites') renderFavoritesView();
+  if (name === 'settings')  refreshSettings();
+}
+
+function refreshSettings() {
+  ui.updateSettingsView(favorites.length, APP_VERSION, {
+    poolSize:    pool.length,
+    seenCount:   getSeen().length,
+    customCount: customQs.length,
+    timerSecs,
+  });
+}
+
+function renderFavoritesView() {
+  ui.setFavTab(favTab);
+  if (favTab === 'saved') {
+    ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog, shareById);
+  } else {
+    const historyQs = getSeen().slice().reverse()
+      .map(id => questionById.get(id))
+      .filter(Boolean);
+    ui.renderHistory(historyQs, favorites, toggleFavFromHistory, shareById);
+  }
 }
 
 function getFavQs() {
@@ -216,8 +353,19 @@ function getFavQs() {
 function removeFav(id) {
   favorites = favorites.filter(f => f !== id);
   saveFavs(favorites);
-  ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
+  renderFavoritesView();
   ui.updateSavedChip(favorites.length);
+}
+
+function toggleFavFromHistory(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(f => f !== id);
+  } else {
+    favorites.push(id);
+  }
+  saveFavs(favorites);
+  ui.updateSavedChip(favorites.length);
+  renderFavoritesView();
 }
 
 function openNoteDialog(id) {
@@ -229,8 +377,46 @@ function openNoteDialog(id) {
       delete notes[id];
     }
     saveNotes(notes);
-    ui.renderFavorites(getFavQs(), notes, removeFav, openNoteDialog);
+    renderFavoritesView();
   });
+}
+
+/* ── Custom questions ───────────────────────── */
+function addCustomQuestion(text, depth) {
+  const nextId = customQs.length
+    ? Math.max(...customQs.map(c => c.id)) + 1
+    : CUSTOM_ID_BASE + 1;
+  customQs.push({ id: nextId, question: text, depth });
+  saveCustom(customQs);
+  rebuildQuestionIndex();
+  buildPool();
+  ui.updateCustomCount(customQs.length);
+  ui.showToast('Question added to the deck');
+  if (currentView === 'settings') refreshSettings();
+  // If the player had exhausted the pool, the new question revives it
+  if (currentView === 'cards' && !current && !activeDeck) drawCard(true);
+}
+
+function deleteCustomQuestion(id) {
+  customQs = customQs.filter(c => c.id !== id);
+  saveCustom(customQs);
+  favorites = favorites.filter(f => f !== id);
+  saveFavs(favorites);
+  delete notes[id];
+  saveNotes(notes);
+  delete ratings[id];
+  saveRatings(ratings);
+  if (seen.includes(id)) {
+    seen = seen.filter(s => s !== id);
+    saveSeen(seen);
+  }
+  rebuildQuestionIndex();
+  buildPool();
+  ui.renderCustomList(customQs, deleteCustomQuestion);
+  ui.updateCustomCount(customQs.length);
+  ui.updateSavedChip(favorites.length);
+  if (currentView === 'settings') refreshSettings();
+  if (current?.id === id && currentView === 'cards') drawCard(true);
 }
 
 /* ── Filters ────────────────────────────────── */
@@ -282,6 +468,8 @@ function completeSetup() {
   if (depthBtn) filters.depths = depthBtn.dataset.depths.split(',').map(Number);
 
   saveFilters(filters);
+  players.turn = 0;
+  savePlayers(players);
   localStorage.setItem(STORAGE_SETUP, '1');
   enterApp();
 }
@@ -294,6 +482,7 @@ function enterApp() {
   ui.updateFilterBadge(filters);
   ui.updateSavedChip(favorites.length);
   ui.syncDeckMode(activeDeck);
+  ui.syncTurnBanner(players);
   ui.els.setupView.classList.remove('active');
   navigateTo('cards');
   drawCard(true);
@@ -336,6 +525,10 @@ function confirmReset() {
   seen = [];
   saveSeen(seen);
   current = null;
+  players = { names: [], turn: 0 };
+  savePlayers(players);
+  ui.renderPlayerChips(players.names, removePlayer);
+  ui.stopCardTimer();
   document.querySelectorAll('.setting-card').forEach((b, i) => {
     b.classList.toggle('active', i === 0);
     b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
@@ -440,14 +633,39 @@ function wireEvents() {
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if      (document.getElementById('note-dialog').classList.contains('open')) ui.closeNoteDialog();
-    else if (ui.els.resetDialog.classList.contains('open')) ui.closeDialog();
-    else if (ui.els.filterSheet.classList.contains('open')) ui.closeSheet();
-    else if (ui.els.deckSheet.classList.contains('open'))   ui.closeDeckSheet();
+    else if (ui.els.customDialog.classList.contains('open')) ui.closeCustomDialog();
+    else if (ui.els.resetDialog.classList.contains('open'))  ui.closeDialog();
+    else if (ui.els.filterSheet.classList.contains('open'))  ui.closeSheet();
+    else if (ui.els.deckSheet.classList.contains('open'))    ui.closeDeckSheet();
+    else if (ui.els.customSheet.classList.contains('open'))  ui.closeCustomSheet();
+  });
+
+  // Keyboard shortcuts on the cards view
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') return;
+    if (currentView !== 'cards') return;
+    if (e.target.closest('input, textarea')) return;
+    if (document.querySelector('.bottom-sheet.open, .dialog.open')) return;
+    if (e.key === 'ArrowRight' && current) {
+      e.preventDefault();
+      doNext();
+    } else if (e.key === 'ArrowLeft' && getSeen().length) {
+      e.preventDefault();
+      doUndo();
+    } else if ((e.key === 's' || e.key === 'S') && current) {
+      doSave();
+    }
   });
 
   ui.els.savedChip.addEventListener('click', () => navigateTo('favorites'));
 
   document.getElementById('btn-start').addEventListener('click', completeSetup);
+
+  // Players
+  ui.els.btnAddPlayer.addEventListener('click', addPlayer);
+  ui.els.playerInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addPlayer(); }
+  });
 
   const wireSingleSelect = (containerId, itemSelector) => {
     document.getElementById(containerId).addEventListener('click', e => {
@@ -467,6 +685,10 @@ function wireEvents() {
   ui.els.navCards.addEventListener('click',    () => navigateTo('cards'));
   ui.els.navSaved.addEventListener('click',    () => navigateTo('favorites'));
   ui.els.navSettings.addEventListener('click', () => navigateTo('settings'));
+
+  // Saved / History tabs
+  ui.els.tabSaved.addEventListener('click',   () => { favTab = 'saved';   renderFavoritesView(); });
+  ui.els.tabHistory.addEventListener('click', () => { favTab = 'history'; renderFavoritesView(); });
 
   ui.els.btnUndo.addEventListener('click', doUndo);
   ui.els.btnNext.addEventListener('click', doNext);
@@ -533,6 +755,47 @@ function wireEvents() {
     ui.setTheme(btn.dataset.theme);
   });
 
+  // Answer timer
+  ui.els.timerSeg.addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    timerSecs = Number(btn.dataset.secs);
+    saveTimer(timerSecs);
+    ui.els.timerSeg.querySelectorAll('.seg-btn').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    if (currentView === 'cards' && current) ui.startCardTimer(timerSecs);
+    else if (!timerSecs) ui.stopCardTimer();
+  });
+
+  // Custom questions
+  ui.els.btnAddCustom.addEventListener('click', () => ui.openCustomDialog(addCustomQuestion));
+  ui.els.btnManageCustom.addEventListener('click', () => {
+    ui.renderCustomList(customQs, deleteCustomQuestion);
+    ui.openCustomSheet();
+  });
+  ui.els.customSheetScrim.addEventListener('click', ui.closeCustomSheet);
+  ui.els.customCancel.addEventListener('click', ui.closeCustomDialog);
+  ui.els.customScrim.addEventListener('click', ui.closeCustomDialog);
+  ui.els.customAdd.addEventListener('click', ui.confirmCustomDialog);
+  ui.els.customTextarea.addEventListener('input', e => {
+    ui.els.customCharCount.textContent = `${e.target.value.length} / 280`;
+  });
+  ui.els.customDepthSeg.addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    ui.els.customDepthSeg.querySelectorAll('.seg-btn').forEach(b =>
+      b.classList.toggle('active', b === btn));
+  });
+
+  // Install prompt
+  ui.els.btnInstall.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice.catch(() => null);
+    installPrompt = null;
+    ui.syncInstallItem(false);
+  });
+
   ui.els.btnExportSaved.addEventListener('click', exportSaved);
 
   ui.els.btnClearSaved.addEventListener('click', () => {
@@ -545,7 +808,7 @@ function wireEvents() {
         favorites = [];
         saveFavs(favorites);
         ui.updateSavedChip(0);
-        if (currentView === 'settings') ui.updateSettingsView(0, APP_VERSION, { poolSize: pool.length, seenCount: seen.length });
+        if (currentView === 'settings') refreshSettings();
       },
     });
   });
@@ -553,13 +816,14 @@ function wireEvents() {
   ui.els.btnClearHist.addEventListener('click', () => {
     ui.openDialog({
       title: 'Clear session history?',
-      body: "All cards will be marked as unseen and you'll start fresh from the full deck.",
+      body: activeDeck
+        ? `This resets your progress in ${activeDeck.label} and starts the deck over.`
+        : "All cards will be marked as unseen and you'll start fresh from the full deck.",
       confirmText: 'Clear history',
       cb: () => {
-        seen = [];
-        saveSeen(seen);
+        setSeenList([]);
         if (currentView === 'cards') drawCard(true);
-        if (currentView === 'settings') ui.updateSettingsView(favorites.length, APP_VERSION, { poolSize: pool.length, seenCount: 0 });
+        if (currentView === 'settings') refreshSettings();
       },
     });
   });
