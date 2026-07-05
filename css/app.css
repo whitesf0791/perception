@@ -959,6 +959,7 @@ html, body {
 .seg-btn {
   flex: 1;
   height: 40px;
+  padding: 0 4px;
   border: none;
   border-right: 1px solid var(--md-outline);
   background: transparent;
@@ -968,6 +969,7 @@ html, body {
   line-height: 20px;
   font-weight: 500;
   letter-spacing: 0.1px;
+  white-space: nowrap;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -980,6 +982,9 @@ html, body {
   user-select: none;
 }
 .seg-btn:last-child { border-right: none; }
+/* Keep labels clear of the pill's rounded ends */
+.seg-btn:first-child { padding-left: 12px; }
+.seg-btn:last-child  { padding-right: 12px; }
 .seg-btn::before {
   content: '';
   position: absolute;
@@ -2157,6 +2162,15 @@ html.light .theme-icon--moon { display: none; }
 
 /* Full-width segmented control (settings) */
 .segmented-group--full { flex: 1; }
+
+/* Theme toggle: never squeeze below its natural width (labels would clip) */
+#settings-theme-seg { flex-shrink: 0; }
+
+/* A segmented row directly under its label row is one setting — no divider */
+.settings-item:has(> .segmented-group--full) {
+  border-top: none;
+  padding-top: 0;
+}
 
 /* ── Toast / snackbar ───────────────────── */
 .toast {
