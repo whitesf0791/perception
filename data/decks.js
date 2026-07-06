@@ -59,4 +59,50 @@ export const DECKS = [
     description: 'For brothers and sisters reconnecting as adults — the shared past and the divergent present.',
     ids: [44, 63, 296, 200, 265, 287, 77, 98, 264, 318, 316, 266, 286, 337],
   },
+
+  /* ── Intimacy — for partners (18+) ─────────────────────────
+     Inspired by the frameworks in Emily Nagoski's
+     "Come as You Are" and "Come Together". */
+  {
+    id: 'rekindle',
+    label: 'Rekindle',
+    description: 'For partners rebuilding the spark — co-create the context where pleasure comes easy.',
+    intimate: true,
+    ids: [415, 418, 416, 422, 417, 423, 428, 420, 424, 421, 425, 426, 427, 419],
+  },
+  {
+    id: 'after-dark',
+    label: 'After Dark',
+    description: 'Slow-burn questions meant to turn the dial up. Best played close together.',
+    intimate: true,
+    ids: [429, 431, 430, 435, 434, 437, 438, 440, 436, 439, 433, 441, 442, 432],
+  },
+  {
+    id: 'ons-and-offs',
+    label: 'Ons & Offs',
+    description: "Map each other's accelerators and brakes — what turns you on, and what turns you off.",
+    intimate: true,
+    ids: [401, 403, 404, 405, 402, 406, 413, 409, 414, 407, 410, 412, 408, 411],
+  },
+  {
+    id: 'floorplan',
+    label: 'The Floorplan',
+    description: 'Find the way from stress, worry, or anger to a sexier state of mind — room by room.',
+    intimate: true,
+    ids: [443, 448, 444, 451, 450, 456, 445, 446, 449, 447, 453, 455, 452, 454],
+  },
+  {
+    id: 'body-and-self',
+    label: 'Body & Self',
+    description: "Unlearn the 'shoulds'. Confidence is knowing what's true; joy is loving it.",
+    intimate: true,
+    ids: [457, 460, 470, 469, 466, 461, 459, 458, 462, 464, 467, 465, 468, 463],
+  },
+  {
+    id: 'desire-decoded',
+    label: 'Desire, Decoded',
+    description: 'Spontaneous or responsive, wanting vs. liking — how desire actually works.',
+    intimate: true,
+    ids: [471, 474, 475, 478, 482, 472, 476, 479, 481, 480, 473, 477, 483, 484],
+  },
 ];

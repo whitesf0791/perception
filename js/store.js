@@ -9,7 +9,7 @@ export const STORAGE_PLAYERS   = 'conv_card_players';
 export const STORAGE_DECK_PROG = 'conv_card_deck_progress';
 export const STORAGE_CUSTOM    = 'conv_card_custom';
 export const STORAGE_TIMER     = 'conv_card_timer';
-export const APP_VERSION       = '1.5.1';
+export const APP_VERSION       = '1.6.0';
 
 /* Custom question ids start here to never collide with the library */
 export const CUSTOM_ID_BASE = 100000;
@@ -17,13 +17,16 @@ export const CUSTOM_ID_BASE = 100000;
 export const ALL_CATEGORIES = [
   'childhood', 'travel', 'work_ambition', 'values_beliefs', 'relationships',
   'hypothetical', 'humor', 'food_lifestyle', 'pop_culture', 'personal_growth',
-  'dreams_future', 'random',
+  'dreams_future', 'random', 'intimacy',
 ];
+/* Intimacy is opt-in: excluded from free play and presets unless enabled in filters.
+   The intimacy decks always work — deck mode ignores filters. */
+export const STANDARD_CATEGORIES = ALL_CATEGORIES.filter(c => c !== 'intimacy');
 export const ALL_TYPES = [
   'memory', 'reveal', 'opinion', 'hypothetical', 'would_you_rather', 'preference', 'ranking',
 ];
 export const DEFAULT_FILTERS = {
-  categories: [...ALL_CATEGORIES],
+  categories: [...STANDARD_CATEGORIES],
   depths:  [1, 2, 3],
   setting: 'any',
   types:   [...ALL_TYPES],
@@ -35,7 +38,7 @@ export const FILTER_PRESETS = [
     id: 'first-date',
     label: 'First date',
     depths: [1, 2],
-    categories: [...ALL_CATEGORIES],
+    categories: [...STANDARD_CATEGORIES],
     setting: 'any',
     types: [...ALL_TYPES],
   },
@@ -43,7 +46,7 @@ export const FILTER_PRESETS = [
     id: 'work-team',
     label: 'Work team',
     depths: [1, 2],
-    categories: ALL_CATEGORIES.filter(c => c !== 'relationships'),
+    categories: STANDARD_CATEGORIES.filter(c => c !== 'relationships'),
     setting: 'group',
     types: [...ALL_TYPES],
   },
@@ -51,7 +54,7 @@ export const FILTER_PRESETS = [
     id: 'old-friends',
     label: 'Old friends',
     depths: [1, 2, 3],
-    categories: [...ALL_CATEGORIES],
+    categories: [...STANDARD_CATEGORIES],
     setting: 'any',
     types: [...ALL_TYPES],
   },
@@ -59,7 +62,7 @@ export const FILTER_PRESETS = [
     id: 'deep-dive',
     label: 'Deep dive',
     depths: [2, 3],
-    categories: [...ALL_CATEGORIES],
+    categories: [...STANDARD_CATEGORIES],
     setting: 'one_on_one',
     types: [...ALL_TYPES],
   },
@@ -82,9 +85,9 @@ function write(key, value) {
 
 export function loadFilters() {
   const f = read(STORAGE_FILTERS, null);
-  if (!f) return { ...DEFAULT_FILTERS, categories: [...ALL_CATEGORIES], types: [...ALL_TYPES] };
+  if (!f) return { ...DEFAULT_FILTERS, categories: [...STANDARD_CATEGORIES], types: [...ALL_TYPES] };
   return {
-    categories: f.categories || [...ALL_CATEGORIES],
+    categories: f.categories || [...STANDARD_CATEGORIES],
     depths:     (f.depths || [1, 2, 3]).map(Number),
     setting:    f.setting || 'any',
     types:      f.types   || [...ALL_TYPES],

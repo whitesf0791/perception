@@ -1,4 +1,4 @@
-import { STORAGE_THEME, ALL_CATEGORIES, ALL_TYPES, DEPTH_LABELS } from './store.js';
+import { STORAGE_THEME, ALL_TYPES, DEPTH_LABELS, DEFAULT_FILTERS } from './store.js';
 
 /* ── DOM refs ───────────────────────────────── */
 export const els = {
@@ -779,9 +779,11 @@ export const closeCustomSheet = () => setSheet(els.customSheet, els.customSheetS
 
 /* ── Filter chips ───────────────────────────── */
 export function updateFilterBadge(filters) {
+  const defaultCats = new Set(DEFAULT_FILTERS.categories);
   const isDefault =
     filters.depths.length    === 3 &&
-    filters.categories.length === ALL_CATEGORIES.length &&
+    filters.categories.length === defaultCats.size &&
+    filters.categories.every(c => defaultCats.has(c)) &&
     filters.types.length      === ALL_TYPES.length &&
     filters.setting           === 'any';
   els.filterBadge.classList.toggle('visible', !isDefault);

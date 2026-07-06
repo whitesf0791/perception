@@ -1810,6 +1810,19 @@ html.light .theme-icon--moon { display: none; }
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+/* Section label inside the deck grid (spans both columns) */
+.deck-section {
+  grid-column: 1 / -1;
+  margin: 12px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--md-primary);
+}
+.deck-card--intimate { border-color: var(--md-primary); border-style: dashed; }
+.deck-card--intimate.is-active,
+.deck-card--intimate:hover { border-style: solid; }
 .deck-card {
   display: flex;
   flex-direction: column;
