@@ -98,7 +98,7 @@ export function setTheme(mode) {
   document.documentElement.classList.toggle('light', isLight);
   localStorage.setItem(STORAGE_THEME, mode);
   document.querySelector('meta[name="theme-color"]')
-    .setAttribute('content', isLight ? '#FFF8F2' : '#1A1612');
+    .setAttribute('content', isLight ? '#FFFFFF' : '#111318');
   document.querySelectorAll('#settings-theme-seg .seg-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.theme === mode));
 }
