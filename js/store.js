@@ -9,7 +9,7 @@ export const STORAGE_PLAYERS   = 'conv_card_players';
 export const STORAGE_DECK_PROG = 'conv_card_deck_progress';
 export const STORAGE_CUSTOM    = 'conv_card_custom';
 export const STORAGE_TIMER     = 'conv_card_timer';
-export const APP_VERSION       = '1.7.0';
+export const APP_VERSION       = '1.7.1';
 
 /* Custom question ids start here to never collide with the library */
 export const CUSTOM_ID_BASE = 100000;

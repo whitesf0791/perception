@@ -77,6 +77,10 @@
 /* ── Base ─────────────────────────────────── */
 html, body {
   height: 100%;
+  /* iOS Chrome/Safari report the layout viewport as if their toolbars were
+     hidden, so 100% can be taller than what's actually visible on screen —
+     dvh tracks the real, currently-visible height instead. */
+  height: 100dvh;
   overflow: hidden;
   font-family: var(--font);
   background: var(--md-bg);
@@ -89,6 +93,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  height: 100dvh;
   max-width: 600px;
   margin: 0 auto;
   position: relative;
